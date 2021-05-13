@@ -14,7 +14,8 @@ list_of_companies_fashion <- c("72573",
                                "75288",
                                "78239",
                                "95574",
-                               "100726") # expand later
+                               "100726",
+                               "103379") # expand later
 
 all_texts <- NULL
 
@@ -43,15 +44,17 @@ all_texts <- separate(
   sep = "-",
   remove = TRUE)
 
-write.csv(all_texts, "all_texts.csv")
+# write.csv(all_texts, "all_texts.csv")
 
-## prep over
 text_corpus <- corpus(all_texts)
 summary_content <- summary(text_corpus)
 
+count_tokens <- ntoken(text_corpus) #counts total tokens in the text
+count_tokens <- as.data.frame(count_tokens) # convert to df for easy merge
+
 summary(summary_content)
 
-summary_content %>% 
+summary_content %>%     # get a summary of the data
   summarise(
     count = n(),
     avg_length = mean(Sentences),
@@ -73,20 +76,51 @@ dfm_texts = dfm(text_corpus,
              remove_url = TRUE )     # this removes urls
 
 
-dictionary_csr <- dictionary(file = "Corporate Social Responsibility.cat")
+dictionary_csr <- dictionary(file = "Corporate Social Responsibility.cat") #load the 1st dictionary
 
-all_esg_words <- dfm(dfm_texts, dictionary = dictionary_csr)
+all_esg_words <- dfm(dfm_texts, dictionary = dictionary_csr) # set up a dfm with word count by category
 
-all_esg_words <- convert(all_esg_words, to = "data.frame")
+all_esg_words <- convert(all_esg_words, to = "data.frame") # convert it to df for easy merge
 
-all_esg_words <- cbind(all_esg_words, all_texts[1:4])
+all_esg_words <- cbind(all_esg_words, all_texts[1:4]) # merge with cik and year data
+all_esg_words <- cbind(all_esg_words, count_tokens) # merge with the token count
+all_esg_words$year <- as.Date(all_esg_words$year, format = "%Y")
+# find the relative ESG-related words 
 
-ggplot(all_esg_words, aes(x=year, y=ENVIRONMENT, color=cik)) +
+total_ESG_only <- all_esg_words %>% 
+        select(ENVIRONMENT, EMPLOYEE, 'HUMAN RIGHTS', 'SOCIAL AND COMMUNITY') %>% 
+        rowSums(na.rm=TRUE)
+  
+all_esg_words <- cbind(all_esg_words, total_ESG_only) 
+  
+all_esg_words <- all_esg_words %>% mutate(relative_env = ENVIRONMENT/count_tokens)
+all_esg_words <- all_esg_words %>% mutate(relative_social = `SOCIAL AND COMMUNITY`/count_tokens)
+all_esg_words <- all_esg_words %>% mutate(relative_employee = EMPLOYEE/count_tokens)
+all_esg_words <- all_esg_words %>% mutate(relative_humans = `HUMAN RIGHTS`/count_tokens)
+all_esg_words <- all_esg_words %>% mutate(relative_overall = total_ESG_only/count_tokens)
+
+
+
+ggplot(all_esg_words, aes(x=year, y=relative_env, color=cik)) +
   geom_point() + scale_color_brewer(palette="Dark2") + 
-  ggtitle("Number of ENVIRONMENT words")
+  ggtitle("Relatvie share of ENVIRONMENT words")
 
+ggplot(all_esg_words, aes(x=year, y=relative_social, color=cik)) +
+  geom_point() + scale_color_brewer(palette="Dark2") + 
+  ggtitle("Relatvie share of social words")
 
-# to-do: add a column with n_tokens to the initial df & compute relative share of ESG wording
+ggplot(all_esg_words, aes(x=year, y=relative_employee, color=cik)) +
+  geom_point() + scale_color_brewer(palette="Dark2") + 
+  ggtitle("Relatvie share of employee caring words")
+
+ggplot(all_esg_words, aes(x=year, y=relative_humans, color=cik)) +
+  geom_point() + scale_color_brewer(palette="Dark2") + 
+  ggtitle("Relatvie share of human rights words")
+
+ggplot(all_esg_words, aes(x=year, y=relative_overall, color=cik)) +
+  geom_point() + scale_color_brewer(palette="Dark2") + 
+  ggtitle("Relatvie share of ESG-related words")
+-do: add a column with n_tokens to the initial df & compute relative share of ESG wording
 
 ## BaierBerningerKiesel_ESG-Wordlist dictionary
 
