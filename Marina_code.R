@@ -120,18 +120,63 @@ ggplot(all_esg_words, aes(x=year, y=relative_humans, color=cik)) +
 ggplot(all_esg_words, aes(x=year, y=relative_overall, color=cik)) +
   geom_point() + scale_color_brewer(palette="Dark2") + 
   ggtitle("Relatvie share of ESG-related words")
--do: add a column with n_tokens to the initial df & compute relative share of ESG wording
+
 
 ## BaierBerningerKiesel_ESG-Wordlist dictionary
 
+words_BBK <- read.csv(paste0(getwd(), "/BaierBerningerKiesel.csv"), sep = ";")
+dictionary_csr <- dictionary(file = "Corporate Social Responsibility.cat") #load the 1st dictionary
+
+Governance_BBK <- words_BBK[words_BBK$Topic == 'Governance',]
+Governance_BBK <- Governance_BBK[1]
+
+Environmental_BBK <- words_BBK[words_BBK$Topic == 'Environmental',]
+Environmental_BBK <- Environmental_BBK[1]
+
+Social_BBK <- words_BBK[words_BBK$Topic == 'Social',]
+Social_BBK <- Social_BBK[1]
+
+dictionary_BBK <- dictionary(list(Governance = Governance_BBK, 
+                                  Environmental = Environmental_BBK, 
+                                  Social = Social_BBK))
 
 
+all_esg_words_BBK <- dfm(dfm_texts, dictionary = dictionary_BBK, valuetype = "glob") # set up a dfm with word count by category
+
+all_esg_words_BBK <- convert(all_esg_words_BBK, to = "data.frame") # convert it to df for easy merge
+
+all_esg_words_BBK <- cbind(all_esg_words_BBK, all_texts[1:4]) # merge with cik and year data
+all_esg_words_BBK <- cbind(all_esg_words_BBK, count_tokens) # merge with the token count
+all_esg_words_BBK$year <- as.Date(all_esg_words_BBK$year, format = "%Y")
+# find the relative ESG-related words 
+
+total_ESG_only_BBK <- all_esg_words_BBK %>% 
+  select(Governance.Word, Environmental.Word, Social.Word) %>% 
+  rowSums(na.rm=TRUE)
+
+all_esg_words_BBK <- cbind(all_esg_words_BBK, total_ESG_only_BBK) 
+
+all_esg_words_BBK <- all_esg_words_BBK %>% mutate(relative_govern = Governance.Word/count_tokens)
+all_esg_words_BBK <- all_esg_words_BBK %>% mutate(relative_env = Environmental.Word/count_tokens)
+all_esg_words_BBK <- all_esg_words_BBK %>% mutate(relative_soc = Social.Word/count_tokens)
+all_esg_words_BBK <- all_esg_words_BBK %>% mutate(relative_overall = total_ESG_only_BBK/count_tokens)
 
 
+ggplot(all_esg_words_BBK, aes(x=year, y=relative_govern, color=cik)) +
+  geom_point() + scale_color_brewer(palette="Dark2") + 
+  ggtitle("Relatvie share of governance words")
 
-## merged dictionaries
+ggplot(all_esg_words_BBK, aes(x=year, y=relative_env, color=cik)) +
+  geom_point() + scale_color_brewer(palette="Dark2") + 
+  ggtitle("Relatvie share of environment words")
 
+ggplot(all_esg_words_BBK, aes(x=year, y=relative_soc, color=cik)) +
+  geom_point() + scale_color_brewer(palette="Dark2") + 
+  ggtitle("Relatvie share of society caring words")
 
+ggplot(all_esg_words_BBK, aes(x=year, y=relative_overall, color=cik)) +
+  geom_point() + scale_color_brewer(palette="Dark2") + 
+  ggtitle("Relatvie share of all ESG-related words")
 
 
 ######## Alexandre's sandbox ###########
