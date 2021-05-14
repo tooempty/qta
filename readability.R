@@ -32,14 +32,6 @@ head(fashion_cik)
 
 # ------ Load 10Ks from files  -------------------------------------------------
 
-list_of_companies_fashion <- c("72573",
-                               "75288",
-                               "78239",
-                               "95574",
-                               "100726",
-                               "103379",
-                               "910521") # expand later, for now 123 filings, 7 companies
-
 all <- NULL
 
 # a loop collects all reports for all companies in list_of_companies_fashion
