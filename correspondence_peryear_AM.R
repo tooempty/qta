@@ -1,6 +1,6 @@
-## Correspondence Analysis of 10Ks for the fashion industry
+## Correspondence per year Analysis of 10Ks for the fashion industry
 #
-# description:
+# description: see results of analysis at the bottom of the script
 #
 #
 # author: AM
@@ -78,7 +78,7 @@ head(all)
 
 # analysis only on one year across companies to have only 27 data points (otherwise way too much)
 year <- all %>%
-  filter(year == 2020)
+  filter(year == 2004)
 
 
 # ------ Corpus ----------------------------------------------------------------
@@ -138,3 +138,17 @@ year_ca2 %>%
   geom_text(aes(label = doc)) +
   theme_classic() +
   labs(x="Dimension 1", y="Dimension 2")
+
+# ------ Results: 2020 ------
+# 2D: text 11 = cik(798081) = Lakeland Industries Inc
+# 2D: text 5 = cik(723603) = Culp Inc
+
+# ------ Results: 2019 ------
+# 2D: text 10 = cik(798081) = Lakeland Industries Inc
+# 2D: text 23 = cik(100726) = Unifi Inc
+# 2D: text 5 = cik(723603) = Culp Inc
+
+# ------ Results: 2004 ------
+# 1D & 2D: text 18 = cik(100726) = Unifi Inc
+# 1D & 2D: text 7 = cik(798081) = Lakeland Industries Inc
+# 2D: text 4&16 = cik(910521&1065837) = Deckers Outdoor Corp & Skechers USA Inc
