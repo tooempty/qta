@@ -189,6 +189,39 @@ ggplot(all_esg_words_BBK, aes(x=year, y=relative_overall, color=cik)) +
 
 ######## Martin's sandbox ###########
 
+library("quanteda.corpora")
+library("quanteda.textstats")
+
+#Collocation with 2-5 words
+
+toks_texts <- tokens(text_corpus, remove_punct = TRUE)
+tstat_texts_2 <- tokens_select(toks_texts, pattern = "^[A-Z]", 
+                                valuetype = "regex", 
+                                case_insensitive = FALSE, 
+                                padding = TRUE) %>% 
+  textstat_collocations(min_count = 100, size = 2)
+head(tstat_texts_2, 40)
+
+tstat_texts_3 <- tokens_select(toks_texts, pattern = "^[A-Z]", 
+                               valuetype = "regex", 
+                               case_insensitive = FALSE, 
+                               padding = TRUE) %>% 
+  textstat_collocations(min_count = 100, size = 3)
+head(tstat_texts_3, 40)
+
+tstat_texts_4 <- tokens_select(toks_texts, pattern = "^[A-Z]", 
+                               valuetype = "regex", 
+                               case_insensitive = FALSE, 
+                               padding = TRUE) %>% 
+  textstat_collocations(min_count = 100, size = 4)
+head(tstat_texts_4, 40)
+
+tstat_texts_5 <- tokens_select(toks_texts, pattern = "^[A-Z]", 
+                               valuetype = "regex", 
+                               case_insensitive = FALSE, 
+                               padding = TRUE) %>% 
+  textstat_collocations(min_count = 100, size = 5)
+head(tstat_texts_5, 40)
 
 
 
