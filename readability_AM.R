@@ -146,6 +146,7 @@ ggplot(rd_fog, aes(x=all$year, y =FOG, color=all$cik=="78239")) + geom_point() +
 
 # ------ Sentences (Work in progress) -------------------------------------------------------------
 
+
 all_sent <- all_corpus %>%
   corpus_reshape("sentences")
 
@@ -154,6 +155,20 @@ format(ndoc(all_sent), big.mark = "'") # in total 571'608 sentences
 average_sent <- round(ndoc(all_sent)/ndoc(all), digits = 0)
 
 average_sent # average of 1'311 sentences per 10 K
+
+summary_content <- summary(all_corpus)
+# takes some seconds
+# takes first 100 observations (only 7 companies)
+
+summary_content %>%     # get a summary of the data
+  summarise(
+    count = n(),
+    avg_length = mean(Sentences),
+    min_length = min(Sentences), 
+    max_length = max(Sentences)   )
+
+ggplot(summary_content, aes(x=year, y=Sentences, color=cik)) +
+  geom_point() + ggtitle("Amount of Sentences per company across years")
 
 
 # QUESTION: How to calculate the average sentences per company??
