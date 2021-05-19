@@ -6,15 +6,25 @@ output: html_document
 ---
 ## Table of Content (temporary)
 **Introduction**
+
 **Sample selection and data**
+
 **Research question**
+
 **Readability and the nature of 10K fillings**
+
 **Correspondence**
+
 **Collocation Analysis**
+
 **Applied dictionaries**
+
 **Relative ESG-wording**
+
 **Comparison with ESG-Ratings**
+
 **Trends between industries**
+
 **Limitations**
 
 ```{r Loading packages and load/prepare 10Ks, include=FALSE}
@@ -99,6 +109,7 @@ fashion_10k <- separate(
 **Introduction**
 
 **Sample selection and data**
+We took the 10K filings back to the year 2004. This leads to 18 reports if the on from 2021 was already made public.For the fashion industry we have a average of `r round(ndoc(fashion_10k)/length(unique(fashion_10k$cik)), digits = 2)` total 10K filings per company. This is due to some later SEC registrations after 2004 for some companies.
 
 **Research question**
 
