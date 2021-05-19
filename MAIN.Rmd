@@ -36,6 +36,7 @@ library(readxl)
 library(quanteda)
 library(stringr)
 library(tidyverse)
+library(ggplot2)
 library(plotly)
 
 # load excel files with cik numbers for each industry with the companies
