@@ -1,0 +1,125 @@
+---
+title: "ESG Content Analysis on US companies"
+author: "QTA group 2"
+date: "5/19/2021"
+output: html_document
+---
+## Table of Content (temporary)
+**Introduction**
+**Sample selection and data**
+**Research question**
+**Readability and the nature of 10K fillings**
+**Correspondence**
+**Collocation Analysis**
+**Applied dictionaries**
+**Relative ESG-wording**
+**Comparison with ESG-Ratings**
+**Trends between industries**
+**Limitations**
+
+```{r Loading packages and load/prepare 10Ks, include=FALSE}
+# load packages
+library(readtext)
+library(dplyr)
+library(here)
+library(readxl)
+library(quanteda)
+library(stringr)
+library(tidyverse)
+library(plotly)
+
+# load excel files with cik numbers for each industry with the companies
+fashion <- read_excel(here("companies", "fashion_cik.xlsx"), sheet = "Sheet1", col_names = TRUE)
+# energy <- read_excel()
+# industry3 <- read_excel()
+
+# keeping only the cik number
+fashion_cik <- fashion[,13]
+# energy_cik <- energy[,13]
+# industry3_cik <- industry3[,13]
+
+# load the 10Ks from downloaded files
+
+fashion_10k <- NULL
+energy_10k <- NULL
+industry3_10k <- NULL
+
+# loop that collects all reports for all companies for each industry
+# this will take some minutes!!!
+
+# fashion (should be 436 observations)
+for (i in fashion_cik$CIK) {
+  output <- readtext(here("Edgar filings_HTML view", "Form 10-K", i))
+  fashion_10k <- rbind(fashion_10k, output)
+}
+
+# energy
+for (i in energy_cik$CIK) {
+  output <- readtext(here("Edgar filings_HTML view", "Form 10-K", i))
+  fashion_10k <- rbind(all, output)
+}
+
+# industry3
+for (i in industry_cik$CIK) {
+  output <- readtext(here("Edgar filings_HTML view", "Form 10-K", i))
+  fashion_10k <- rbind(all, output)
+}
+
+# simple cleaning
+fashion_10k$text <- str_remove_all(fashion_10k$text, "\n•")
+fashion_10k$text <- str_remove_all(fashion_10k$text, "\n")
+#energy_10k
+#industry3
+
+# define columns into cik, report type and report year
+fashion_10k <- separate(
+  fashion_10k,
+  1,
+  into = c("cik", "type", "year", NA),
+  sep = "_",
+  remove = TRUE)
+
+#energy
+#industry3
+
+# only keep year
+#keep the year and not the full date
+fashion_10k <- separate(
+  fashion_10k,
+  "year",
+  into = c("year", NA),
+  sep = "-",
+  remove = TRUE)
+
+#energy
+#industry3
+```
+
+
+**Introduction**
+
+**Sample selection and data**
+
+**Research question**
+
+**Readability and the nature of 10K fillings**
+```{r creating a corpus, include=FALSE}
+fashion_corp <- corpus(fashion_10k)
+#energy
+#industry3
+```
+
+
+**Correspondence**
+
+**Collocation Analysis**
+
+**Applied dictionaries**
+
+**Relative ESG-wording**
+
+**Comparison with ESG-Ratings**
+
+**Trends between industries**
+
+**Limitations**
