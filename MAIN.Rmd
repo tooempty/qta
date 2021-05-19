@@ -114,8 +114,25 @@ We took the 10K filings back to the year 2004. This leads to 18 reports if the o
 **Research question**
 
 **Readability and the nature of 10K fillings**
-```{r creating a corpus, include=FALSE}
+```{r creating a corpus and apply the readability measures, include=FALSE}
+# creating a corpus
+
 fashion_corp <- corpus(fashion_10k)
+#energy
+#industry3
+
+
+# apply Flesch readability measure (takes a few minutes)
+
+fashion_rd_flesch <- fashion_corp %>%
+  textstat_readability(measure = "Flesch", remove_hyphens = TRUE)
+#energy
+# industry3
+
+# apply FOG readability measure (takes a few minutes)
+
+fashion_rd_fog <- fashion_corp %>%
+  textstat_readability(measure = "FOG", remove_hyphens = TRUE)
 #energy
 #industry3
 ```
