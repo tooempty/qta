@@ -138,6 +138,15 @@ fashion_rd_fog <- fashion_corp %>%
 #industry3
 ```
 
+Flesch
+
+```{r Readability plots Flesch, echo = FALSE}
+
+# all companies, all years
+ggplotly(ggplot(fashion_rd_flesch, aes(x=fashion_10k$year, y =Flesch, colour=fashion_10k$cik)) + geom_point() +
+           ggtitle("Flesch - Readability"), tooltip = c("colour", "y", "x"))
+```
+
 
 **Correspondence**
 
