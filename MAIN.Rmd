@@ -137,8 +137,13 @@ fashion_rd_fog <- fashion_corp %>%
 #energy
 #industry3
 ```
-
 Flesch
+
+There are many different methods to try to measure the complexity of a underlying text source. Most measures take somehow into account the text structure, the length of sentences, the difficulty of used words and the usage of infrequent words. One of the first readability measures was developed by Rudolph Flesch back in 1948. As one of the oldest but still frequently used measure for readability it tries to reflect the complexity of a text by the average sentence length and the average number of syllables per word. The Flesch Reading Ease readability measure gives an index ranging from 0 to 100, with a higher index representing a simpler text to read. With an average index of `r round(mean(fashion_rd_flesch$Flesch), digits = 2)` the 10Ks seem to be very complex based on the Flesch measure as a score below the score 30 indicates a high difficulty to read the text and is best understood by university graduates.
+
+references:
+- https://readabilityformulas.com/flesch-reading-ease-readability-formula.php
+- Measuring Readability in Financial Disclosures; TIM LOUGHRAN and BILL MCDONALD; 2014
 
 ```{r Readability plots Flesch, echo = FALSE}
 
