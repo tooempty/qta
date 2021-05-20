@@ -145,20 +145,30 @@ references:
 - https://readabilityformulas.com/flesch-reading-ease-readability-formula.php
 
 
-```{r Readability plots Flesch, echo = FALSE}
+```{r Readability plots Flesch, echo = FALSE, fig.width = 10 , fig.fullwidth=TRUE}
 
 # all companies, all years
-ggplotly(ggplot(fashion_rd_flesch, aes(x=fashion_10k$year, y =Flesch, colour=fashion_10k$cik)) + geom_point() +
-           ggtitle("Flesch - Readability"), tooltip = c("colour", "y", "x"))
+ggplotly(ggplot(fashion_rd_flesch, aes(x=fashion_10k$year, y =Flesch, colour=fashion_10k$cik)) + geom_point() + ggtitle("Flesch - Readability for fashion companies"), tooltip = c("colour", "y", "x"))
 ```
 
 //FOG//
 
-Another well-known readability measure is the FOG index. It is widely used, also in the area of Accounting and Finance. Biddle, Hilary, and Verdi (2009) even stated that it is “a measure of financial statement readability”. The FOG index evaluates the difficulty of understanding a text on similar parameters like the Flesch index. Gunning-Fog, the creator of the FOG index used also the average sentence length. Together with the proportion of complex words (here words with 3-syllables) it forms a linear combination to measure the complexity of a underlying text source. In contrast to the Flesch score a higher FOG index indicates a more difficult text. A index of less than 8 is found to be understood by an universal audience, whereas a score above 17 can only be understood collage graduates.
+Another well-known readability measure is the FOG index. It is widely used, also in the area of Accounting and Finance. Biddle, Hilary, and Verdi (2009) even stated that it is “a measure of financial statement readability”. The FOG index evaluates the difficulty of understanding a text on similar parameters like the Flesch index. Gunning-Fog, the creator of the FOG index used also the average sentence length. Together with the proportion of complex words (here words with 3-syllables) it forms a linear combination to measure the complexity of a underlying text source. In contrast to the Flesch score a higher FOG index indicates a more difficult text. A index of less than 8 is found to be understood by an universal audience, whereas a score above 17 can only be understood collage graduates. The average FOG score for our sample of 27 fashion companies from the US is `r round(mean(fashion_rd_fog$FOG), digits = 2)`. The 10Ks are therefore considered as very complex and difficult to read. The graph below displaying all readability scores for each fashion company over 18 years shows a similar picture than the one for the Flesch score. Keep in mind that the FOG scores behave the oppisite way than the Flesch scores, as a higher FOG score indicates a higher difficulty to read the text source. It can also be seen that the readability is lower towards the more recent years and the variance is slightly smaller during the years 2016 to 2019. However, it seems that for the FOG index the readability scores vary less, expect of single outliers. The company with the most complex 10Ks is PVH Corp. (cik = 78239, 26.11), which was the third complex one using the Flesch score. The most understandable 10Ks were provided again by G III Apparel Group LTD (cik = 821002, 21.82) but also Skechers USA Inc. (cik = 1065837, 22.91) and Fossil Group Inc. (cik= 883569, 22.92) were more understandable than the ohter 10Ks according to the FOG index. Surprisingly the company with the most complex 10Ks regarding the Flesch score, Lakeland Industries, achieves just a very average FOG score of 24.76.
 
 References:
 - Measuring Readability in Financial Disclosures; TIM LOUGHRAN and BILL MCDONALD; 2014
 - Biddle, Gary, Gilles Hilary, and Rodrigo Verdi, 2009, How does financial reporting quality relate to investment efficiency? Journal of Accounting and Economics 48, 112–131.
+
+```{r Readability plots FOG, echo = FALSE, fig.width = 10 , fig.fullwidth=TRUE}
+
+# all companies, all years
+ggplotly(ggplot(fashion_rd_fog, aes(x=fashion_10k$year, y =FOG, color=fashion_10k$cik)) + geom_point() + ggtitle("FOG - Readability for fashion companies"), tooltip = c("colour", "y", "x"))
+```
+
+In summary, both readability measures do calculate a very high complexity for all 10Ks with some differences on company-level. The trend of more difficult 10Ks towards recent years can be observed in both application of the two measures. However, it is highly questionable if these traditional readability measures can be applied to evaluate the readability of financial reports. Loughran and McDonald (2014) define the readability of financial reports as "the effective communication of valuation-relevant information". They even conclude that just consider the file size of 10Ks is a better estimator for the readability of the reports instead of commonly used readability measures.
+
+References:
+- Measuring Readability in Financial Disclosures; TIM LOUGHRAN and BILL MCDONALD; 2014
 
 
 **Correspondence**
