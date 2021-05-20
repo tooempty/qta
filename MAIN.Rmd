@@ -7,7 +7,7 @@ output: html_document
 ## Table of Content (temporary)
 **Introduction**
 
-**Sample selection and data**
+**Sample selection and data collection**
 
 **Research question**
 
