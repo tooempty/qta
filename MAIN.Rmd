@@ -9,6 +9,8 @@ output: html_document
 
 **Sample selection and data collection**
 
+"Financial reporting, or more precisely annual reports, are identified to be the most reliable disclosure to quantify a firm’s contribution to CSR." (Baier, Berninger and Kiesel (2020): Environmental, social and governance reporting in annual reports: A textual analysis)
+
 **Research question**
 
 **Readability and the nature of 10K fillings**
