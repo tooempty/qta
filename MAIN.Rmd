@@ -318,6 +318,13 @@ words_to_be_removed <- c(stopwords("english"), "million", "fiscal", "january", "
            
 
 Appendix 2: Barplot of 75 most frequent dictionary tokens for the CSR dictionary
+```{r Preparing for barplot of 75 most frequent dictionary tokens for the CSR dictionary, include=FALSE}
+
+fashion_csr_all_top75_dfm <- textstat_frequency(fashion_csr_all_dfm, n = 75)
+fashion_csr_all_top75_dfm <- fashion_csr_all_top75_dfm %>%
+  mutate(feature = forcats::fct_reorder(feature, desc(frequency)))
+
+```
 
 ```{r Barplot of 75 most frequent dictionary tokens for the CSR dictionary, echo = FALSE}
 ggplotly(ggplotly(ggplot(fashion_csr_all_top75_dfm, aes(x = feature, y = frequency))
