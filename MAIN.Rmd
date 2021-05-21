@@ -247,18 +247,16 @@ fashion_tokens <- fashion_tokens %>%
 
 ```{r Loading dictionaries, include = FALSE}
 
-### CSR dict ###
+### Load CSR dict ###
 dictionary_csr <- dictionary(file = "CorporateSocialResponsibility.cat")
 # load the 1st dictionary CSR
 
-### BBK dict ###
+### Load BBK dict ###
 dictionary_bbk <- read_excel(here("BaierBerningerKiesel.xlsx"), sheet = "Sheet1", col_names = TRUE)
 # load the 2nd dictionary BBK Excel-file
 
 
-# ------ Selection of dictionary tokens ------
-
-### CSR ###
+### Select CSR dictionary tokens ###
 
 ## selecting tokens
 fashion_csr_all_tokens <- tokens_select(fashion_tokens, dictionary_csr)
@@ -279,9 +277,14 @@ fashion_csr_env_dfm <- dfm(fashion_csr_env_tokens)
 fashion_count_tokens <- ntoken(fashion_dfm)
 ```
 
+//CSR dict//
+
 Pencle and Mălăescu (2016) developed a content analytic dictionary to measure the corporate social responsibility (CSR) of text documents issued by a company. The dictionary was composed by computer-assisted analyses of US IPOs between the years 2011 and 2013. Four dimensions should capture the different dimensions of CSR: Human rights with 297 entries, employee (319), social and community (361) and environment (451). It is notable that different words can occur in multiple dimensions, as for example the term "abuse" is contained in all four dimensions. //TO DO// -> table with dimensions, number of entries and typical examples of words included in the dictionary (human rights: civil_rights, fairness, freedom, minority or privileges; employee: benefit, disability, educate, equal, recognition, team or union; social and community: commitments, communal, foodbank, humans, protected, urban or volunteer; environment: emission, groundwater, renew, sustainable or waste).
 
 If we remove all the stopwords and other terms that are insignificant for our analysis (see Appendix 1) we get a average of `r mean(fashion_count_tokens)` tokens for the fashion companies. Out of these a percentage of `r round(mean(ntoken(fashion_csr_all_dfm))/mean(count_tokens), digits = 4)*100`% tokens are regarded as CSR important terms according to the dictionary by Pencle and Mălăescu (2016). Looking at the different dimensions, the employee category provides the most amount of tokens and human rights contribute the least number of tokens. But all dimensions do provide a fair amount of tokens and the differences between them are small. In addition to the total amount of tokens, the frequency of which tokens appear how often plays a role. It is possible that a few terms occur extremely often and influence the results significantly. A wordcloud shows the most featured dictionary tokens for the fashion sector. It is noticeable that relatively common words such as "future", "management", "plan", "performance" and "employees" occur relatively often and can be significant drivers of the CSR wording.
+
+reference:
+- Pencle & Malescu (2016)
 
 ```{r Wordcloud CSR dictionary, echo = FALSE}
 # wordcloud for most used words in the CSR dictionary
@@ -289,7 +292,12 @@ textplot_wordcloud(fashion_csr_all_dfm, max_words = 100,
                    color = c("grey80", "darkgoldenrod1", "tomato"))
 ```
 
+//BBK dict //
 
+With the increasing importance of environmental, social and governance (ESG) factors for companies and investors, Baier, Berninger and Kiesel (2020) have recently developed a new ESG content dictionary. The dictionary was trained on the basis of financial reports and is intended as a tool to reflect the ESG activities of companies. Each of the 482 words occurring in the dictionary is considered as a ESG-term that is mainly used in the context of ESG. The index consists of three main topics: governance, environmental and social. Further there are 11 categories and 35 subcategories that allows a very precise search for different aspects in the field of ESG.
+
+reference:
+- Baier, Berninger & Kiesel (2020)
 
 
 #### Relative ESG-wording ####
