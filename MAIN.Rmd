@@ -30,6 +30,7 @@ fashion_tokens <- fashion_corp %>%
 words_to_be_removed <- c(stopwords("english"), "million", "fiscal", "january", "february",
            "march", "april", "may", "june", "july", "august", "september",
            "october", "november", "december", "business", "net", "s")
+# //KEEP IN MIND// to update the list in the appendix of removed words
 
 fashion_tokens <- fashion_tokens %>%
   tokens_remove(words_to_be_removed)
