@@ -339,8 +339,17 @@ textplot_wordcloud(fashion_csr_all_dfm, max_words = 100,
 
 #### Appendix ####
 
-Appendix 1:
+Appendix 1: Words that have been additionaly removed during the tokenization process due to insignificance.
 
 words_to_be_removed <- c(stopwords("english"), "million", "fiscal", "january", "february",
            "march", "april", "may", "june", "july", "august", "september",
            "october", "november", "december", "business", "net", "s")
+           
+
+Appendix 2: Barplot of 75 most frequent dictionary tokens for the CSR dictionary
+
+```{r Barplot of 75 most frequent dictionary tokens for the CSR dictionary, echo = FALSE}
+ggplotly(ggplot(fashion_csr_all_top75_dfm, aes(x = feature, y = frequency)) +
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)))
+```
