@@ -5,49 +5,7 @@ date: "5/19/2021"
 output: html_document
 ---
 ## Table of Content (temporary)
-**Introduction**
-
-**Sample selection and data collection**
-
-"Financial reporting, or more precisely annual reports, are identified to be the most reliable disclosure to quantify a firm’s contribution to CSR." (Baier, Berninger and Kiesel (2020): Environmental, social and governance reporting in annual reports: A textual analysis)
-
-**Research question**
-
-**Readability and the nature of 10K fillings**
-
-**Correspondence**
-
-**Collocation Analysis**
-
-```{r Tokenization, include = FALSE}
-
-fashion_tokens <- fashion_corp %>%
-  tokens(remove_punct = TRUE, # remove punctuation
-         remove_numbers = TRUE, # remove numbers
-         remove_symbols = TRUE,
-         remove_url = TRUE) %>% # remove symbols
-  tokens_tolower() # everything to lower cases
-# takes some minutes!
-
-words_to_be_removed <- c(stopwords("english"), "million", "fiscal", "january", "february",
-           "march", "april", "may", "june", "july", "august", "september",
-           "october", "november", "december", "business", "net", "s")
-# //KEEP IN MIND// to update the list in the appendix of removed words
-
-fashion_tokens <- fashion_tokens %>%
-  tokens_remove(words_to_be_removed)
-```
-
-
-**Applied dictionaries**
-
-**Relative ESG-wording**
-
-**Comparison with ESG-Ratings**
-
-**Trends between industries**
-
-**Limitations**
+Introduction // Sample selection and data collection // Research question // Readability and the nature of 10K fillings // Correspondence // Collocation Analysis // Applied dictionaries // Relative ESG-wording // Comparison with ESG-Ratings // Trends between industries // Limitations // Appendix
 
 ```{r Loading packages and load/prepare 10Ks, include=FALSE}
 # load packages
@@ -134,6 +92,9 @@ fashion_10k <- separate(
 
 #### Sample selection and data ####
 We took the 10K filings back to the year 2004. This leads to 18 reports if the on from 2021 was already made public.For the fashion industry we have a average of `r round(ndoc(fashion_10k)/length(unique(fashion_10k$cik)), digits = 2)` total 10K filings per company. This is due to some later SEC registrations after 2004 for some companies.
+
+"Financial reporting, or more precisely annual reports, are identified to be the most reliable disclosure to quantify a firm’s contribution to CSR." (Baier, Berninger and Kiesel (2020): Environmental, social and governance reporting in annual reports: A textual analysis)
+
 
 #### Research question ####
 
@@ -276,11 +237,11 @@ fashion_tokens <- fashion_corp %>%
 words_to_be_removed <- c(stopwords("english"), "million", "fiscal", "january", "february",
            "march", "april", "may", "june", "july", "august", "september",
            "october", "november", "december", "business", "net", "s")
+# //KEEP IN MIND// to update the list in the appendix of removed words
 
 fashion_tokens <- fashion_tokens %>%
   tokens_remove(words_to_be_removed)
 ```
-
 
 #### Applied dictionaries ####
 
