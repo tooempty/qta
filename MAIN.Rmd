@@ -116,7 +116,7 @@ We took the 10K filings back to the year 2004. This leads to 18 reports if the o
 #### Research question ####
 
 #### Readability and the nature of 10K fillings ####
-```{r creating a corpus and apply the readability measures, include=FALSE}
+```{r Creating a corpus and apply the readability measures, include=FALSE}
 # creating a corpus
 
 fashion_corp <- corpus(fashion_10k)
@@ -174,7 +174,7 @@ References:
 
 #### Correspondence ####
 
-```{r correspondance analysis 2004 and 2020, include = FALSE}
+```{r Correspondance analysis 2004 and 2020, include = FALSE}
 # analysis only on one year across companies to have only max 27 data points (otherwise way too much)
 # filter out the years 2004 and 2020 to show difference in correspondance
 fashion_2004 <- fashion_10k %>%
@@ -225,7 +225,7 @@ fashion_20_ca2 <- data.frame(dim1 = coef(fashion_20_ca, doc_dim = 1)$coef_docume
 
 A conductued correspondence analysis supports the picture of higher differences in 10Ks in more recent years compared to current years as concluded by the readability measures. A graphical comparison of a two-dimensional correspondence analysis of the years 2004 and 2020 reveals a greater dispersion and thus greater differences in the 10K reports for the year 2004. This also provides an indication that a greater standardization of the filings could have taken place. However, some companies are always classified as different by the analysis over the years. Lakeland Industries Inc. (text7 in 2004 and text11 in 2020) shows a strong two-dimensional difference across all years. It is also the company which has the highest complexity according the Flesch score. Another company that stands out across multiple years is Unifi Inc. (text18 in 2004 and text24 in 2020). The 10Ks form Unifi seems to be (at least in one dimension) different from the others and different than the ones from Lakeland Industries.
 
-```{r plot 2D correspondance analysis, echo = FALSE, fig.width = 10 , fig.fullwidth=TRUE}
+```{r Plot 2D correspondance analysis, echo = FALSE, fig.width = 10 , fig.fullwidth=TRUE}
 fashion_04_ca2 %>%
   ggplot(aes(x=dim1, y=dim2)) +
   geom_text(aes(label = doc)) +
