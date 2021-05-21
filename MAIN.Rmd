@@ -298,3 +298,5 @@ Pencle and Mălăescu (2016) developed a content analytic dictionary to measure 
 #### Trends between industries ####
 
 #### Limitations ####
+
+#### Appendix ####
