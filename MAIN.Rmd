@@ -349,7 +349,7 @@ words_to_be_removed <- c(stopwords("english"), "million", "fiscal", "january", "
 Appendix 2: Barplot of 75 most frequent dictionary tokens for the CSR dictionary
 
 ```{r Barplot of 75 most frequent dictionary tokens for the CSR dictionary, echo = FALSE}
-ggplotly(ggplot(fashion_csr_all_top75_dfm, aes(x = feature, y = frequency)) +
-  geom_point() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)))
+ggplotly(ggplotly(ggplot(fashion_csr_all_top75_dfm, aes(x = feature, y = frequency))
+         + geom_point(color="steelblue") +
+           theme(axis.text.x = element_text(angle = 90, hjust = 1))))
 ```
