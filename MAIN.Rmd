@@ -300,3 +300,9 @@ Pencle and Mălăescu (2016) developed a content analytic dictionary to measure 
 #### Limitations ####
 
 #### Appendix ####
+
+Appendix 1:
+
+words_to_be_removed <- c(stopwords("english"), "million", "fiscal", "january", "february",
+           "march", "april", "may", "june", "july", "august", "september",
+           "october", "november", "december", "business", "net", "s")
