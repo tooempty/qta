@@ -281,6 +281,13 @@ fashion_tokens <- fashion_tokens %>%
 
 #### Applied dictionaries ####
 
+```{r Tokenization, include = FALSE}
+
+### CSR dict ###
+dictionary_csr <- dictionary(file = "Corporate Social Responsibility.cat")
+# load the 1st dictionary CSR
+```
+
 #### Relative ESG-wording ####
 
 #### Comparison with ESG-Ratings ####
