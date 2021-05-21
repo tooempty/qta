@@ -260,6 +260,25 @@ fashion_20_ca2 %>%
 
 #### Collocation Analysis ####
 
+```{r Tokenization, include = FALSE}
+
+fashion_tokens <- fashion_corp %>%
+  tokens(remove_punct = TRUE, # remove punctuation
+         remove_numbers = TRUE, # remove numbers
+         remove_symbols = TRUE,
+         remove_url = TRUE) %>% # remove symbols
+  tokens_tolower() # everything to lower cases
+# takes some minutes!
+
+words_to_be_removed <- c(stopwords("english"), "million", "fiscal", "january", "february",
+           "march", "april", "may", "june", "july", "august", "september",
+           "october", "november", "december", "business", "net", "s")
+
+fashion_tokens <- fashion_tokens %>%
+  tokens_remove(words_to_be_removed)
+```
+
+
 #### Applied dictionaries ####
 
 #### Relative ESG-wording ####
