@@ -281,12 +281,15 @@ fashion_tokens <- fashion_tokens %>%
 
 #### Applied dictionaries ####
 
-```{r Tokenization, include = FALSE}
+```{r Loading dictionaries, include = FALSE}
 
 ### CSR dict ###
 dictionary_csr <- dictionary(file = "Corporate Social Responsibility.cat")
 # load the 1st dictionary CSR
 ```
+
+Pencle and Mălăescu (2016) developed a content analytic dictionary to measure the corporate social responsibility (CSR) of text documents issued by a company. The dictionary was composed by computer-assisted analyses of US IPOs between the years 2011 and 2013.
+
 
 #### Relative ESG-wording ####
 
