@@ -783,6 +783,10 @@ bev_bbk_total <- plot_ly(data = bev_BBK, x = ~year, y = ~relative_overall, color
 
 #### Trends between industries ####
 
+
+Both measures of readability used (Flesch and FOG) show a similar picture across all three industries. According to both measure the 10Ks seems to be of a very complex nature. All industries included in our analyses do obtained a score that is well under respectively over the range for text sources that are best understood by university graduates. The beverage companies do have a slight higher complexity rating, which can be attribute to the few outliers with extreme values in both measures. This again shows the similarity between those common readability measures and also indicates a disqualification for common readability measure for the context of financial reports.
+
+
 ```{r Time evolution for fashion, echo=FALSE}
 fashion_time_evol <- fashion_BBK %>% group_by(year) %>% # creates a table of mean ESG scores through time 
                                 summarise(mean_env = mean(relative_env),
