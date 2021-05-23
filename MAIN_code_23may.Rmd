@@ -830,8 +830,7 @@ Data collection: The SEC has limited the access for automated tools that downloa
 There are a variety of different ESG-Ratings on the market. The growing usage of these ESG scores has raised questions by policymakers, investors, researchers, and firms about their reliability, consistency, and overall quality. It is not clear, how exactly the scores are rated. Researchers have furthermore documented, that some ESG rating providers retrocactively rewrite scores (Berg, Fabisik, Sautner, 2020, p.1). 
 
 References: 
-Florian Berg, Kornelia Fabisik and Zacharias Sautner. (2020). Rewriting History II: The (Un)predictable Past of ESG Ratings 
-
+Berg, Florian and Fabisik, Kornelia and Sautner, Zacharias, Rewriting History II: The (Un)Predictable Past of ESG Ratings (November 3, 2020). European Corporate Governance Institute – Finance Working Paper 708/2020
 
 #### Further actions ####
 We further plan to expand the analysis by:
