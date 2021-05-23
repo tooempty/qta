@@ -94,13 +94,21 @@ fashion_10k <- separate(
 
 #### Introduction ####
 
+In recent years, social responsibility has become a standard measure for every company. Companies are not only measured by their financial success, but also how they conduct their business. ESG-Ratings are commonly used to compare their performance across industries and sectors. 
+But regardless of how well a company actually adheres to ESG-Standards, it will usually present its actions in a favourable way. 
+This article will look at how US companies in the fashion, energy and beverage industry describe their ESG-measures in the annual 10-K report and compare it with different ESG-Ratings. 
+
 #### Sample selection and data ####
-We took the 10K filings back to the year 2004. This leads to 18 reports if the on from 2021 was already made public.For the fashion industry we have a average of `r round(ndoc(fashion_10k)/length(unique(fashion_10k$cik)), digits = 2)` total 10K filings per company. This is due to some later SEC registrations after 2004 for some companies.
+We took the 10K filings back to the year 2004. This leads to 18 reports if the one from 2021 was already made public. For the fashion industry we have a average of `r round(ndoc(fashion_10k)/length(unique(fashion_10k$cik)), digits = 2)` total 10K filings per company. This is due to some later SEC registrations after 2004 for some companies.
 
 "Financial reporting, or more precisely annual reports, are identified to be the most reliable disclosure to quantify a firm’s contribution to CSR." (Baier, Berninger and Kiesel (2020): Environmental, social and governance reporting in annual reports: A textual analysis)
 
 
 #### Research question ####
+
+Is there a correlation between the wording of a 10-K report and the ESG-score of a company?
+How does the wording of the three ESG dimensions (Environment, Social, Governance) differ across industries? 
+
 
 #### Readability and the nature of 10K fillings ####
 ```{r Creating a corpus and apply the readability measures, include=FALSE}
@@ -422,6 +430,8 @@ Since our goal is to analyse whether 10-k reports carry valuable information reg
 #### Trends between industries ####
 
 #### Limitations ####
+
+Data collection: The SEC has limited the access for automated tools that download EDGAR filings (e.g. 10-K reports). Therefore, most companies had incomplete data that had to be added manually. That makes it much more difficult if you want so scale the scope of the research question.  
 
 #### Appendix ####
 
