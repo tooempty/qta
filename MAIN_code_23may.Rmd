@@ -28,12 +28,12 @@ fashion <- read_excel(here("fashion_cik.xlsx"), sheet = "Sheet1", col_names = TR
 fashion <- fashion[, c(1, 4:14)]
 
 # energy <- read_excel()
-# industry3 <- read_excel()
+# bev <- read_excel()
 
 # keeping only the cik number
 fashion_cik <- fashion$CIK
-# energy_cik <- energy[,13]
-# industry3_cik <- industry3[,13]
+# energy_cik <- energy[,14]
+# bev_cik <- bev[,4]
 
 # load the 10Ks from downloaded files
 
