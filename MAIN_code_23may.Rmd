@@ -19,6 +19,9 @@ library(stringr)
 library(tidyverse)
 library(ggplot2)
 library(plotly)
+library(quanteda.textstats)
+library(quanteda.textplots)
+
 
 # load excel files with cik numbers for each industry with the companies
 fashion <- read_excel(here("fashion_cik.xlsx"), sheet = "Sheet1", col_names = TRUE)
@@ -243,18 +246,16 @@ fashion_tokens <- fashion_tokens %>%
 ```
 
 #### Applied dictionaries ####
-
-
 //CSR dict//
 
 Pencle and Mălăescu (2016) developed a content analytic dictionary to measure the corporate social responsibility (CSR) of text documents issued by a company. The dictionary was composed by computer-assisted analyses of US IPOs between the years 2011 and 2013. Four dimensions should capture the different dimensions of CSR: Human rights with 297 entries, employee (319), social and community (361) and environment (451). It is notable that different words can occur in multiple dimensions, as for example the term "abuse" is contained in all four dimensions. //TO DO// -> table with dimensions, number of entries and typical examples of words included in the dictionary (human rights: civil_rights, fairness, freedom, minority or privileges; employee: benefit, disability, educate, equal, recognition, team or union; social and community: commitments, communal, foodbank, humans, protected, urban or volunteer; environment: emission, groundwater, renew, sustainable or waste).
 
-If we remove all the stopwords and other terms that are insignificant for our analysis (see Appendix 1) we get a average of `r mean(fashion_count_tokens)` tokens for the fashion companies. Out of these a percentage of `r round(mean(ntoken(fashion_csr_all_dfm))/mean(count_tokens), digits = 4)*100`% tokens are regarded as CSR important terms according to the dictionary by Pencle and Mălăescu (2016). Looking at the different dimensions, the employee category provides the most amount of tokens and human rights contribute the least number of tokens. But all dimensions do provide a fair amount of tokens and the differences between them are small. In addition to the total amount of tokens, the frequency of which tokens appear how often plays a role. It is possible that a few terms occur extremely often and influence the results significantly. A wordcloud shows the most featured dictionary tokens for the fashion sector. It is noticeable that relatively common words such as "future", "management", "plan", "performance" and "employees" occur relatively often and can be significant drivers of the CSR wording.
+If we remove all the stopwords and other terms that are insignificant for our analysis (see Appendix 1) we get a average of r mean(fashion_count_tokens) tokens for the fashion companies. Out of these a percentage of r round(mean(ntoken(fashion_csr_all_dfm))/mean(count_tokens), digits = 4)*100% tokens are regarded as CSR important terms according to the dictionary by Pencle and Mălăescu (2016). Looking at the different dimensions, the employee category provides the most amount of tokens and human rights contribute the least number of tokens. But all dimensions do provide a fair amount of tokens and the differences between them are small. In addition to the total amount of tokens, the frequency of which tokens appear how often plays a role. It is possible that a few terms occur extremely often and influence the results significantly. A wordcloud shows the most featured dictionary tokens for the fashion sector. It is noticeable that relatively common words such as "future", "management", "plan", "performance" and "employees" occur relatively often and can be significant drivers of the CSR wording.
 
 reference:
 - Pencle & Malescu (2016)
 
-```{r Loading dictionaries, include = FALSE}
+```{r, include = FALSE}
 
 ### Load CSR dict ###
 dictionary_csr <- dictionary(file = "CorporateSocialResponsibility.cat")
@@ -285,8 +286,6 @@ fashion_CSR <- fashion_CSR %>% mutate(relative_env = ENVIRONMENT/count_tokens_fa
                                               relative_empl = EMPLOYEE/count_tokens_fashion,
                                               relative_humans = `HUMAN RIGHTS`/count_tokens_fashion,
                                               relative_overall = fashion_CSR_total/count_tokens_fashion)
-
-library(plotly)
 
 ```
 
@@ -324,39 +323,8 @@ fashion_csr_total <- plot_ly(data = fashion_CSR, x = ~year, y = ~relative_overal
       layout(title = 'Share of ESG wording. CSR dictionary',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
-
-
 ```
 
-We further conduct the analysis on token level, and not aggregately, to see whether some ESG-related words words appear particularly frequently. 
-
-```{r Wordcloud CSR dictionary, echo = FALSE}
-### Select CSR dictionary tokens ###
-
-## selecting tokens
-fashion_csr_all_tokens <- tokens_select(fashion_tokens, dictionary_csr)
-fashion_csr_hum_tokens <- tokens_select(fashion_tokens, dictionary_csr$`HUMAN RIGHTS`)
-fashion_csr_emp_tokens <- tokens_select(fashion_tokens, dictionary_csr$EMPLOYEE)
-fashion_csr_soc_tokens <- tokens_select(fashion_tokens, dictionary_csr$`SOCIAL AND COMMUNITY`)
-fashion_csr_env_tokens <- tokens_select(fashion_tokens, dictionary_csr$ENVIRONMENT)
-
-## creating dfm
-fashion_dfm <- dfm(fashion_tokens)
-fashion_csr_all_dfm <- dfm(fashion_csr_all_tokens)
-fashion_csr_hum_dfm <- dfm(fashion_csr_hum_tokens)
-fashion_csr_emp_dfm <- dfm(fashion_csr_emp_tokens)
-fashion_csr_soc_dfm <- dfm(fashion_csr_soc_tokens)
-fashion_csr_env_dfm <- dfm(fashion_csr_env_tokens)
-
-## count token
-fashion_count_tokens <- ntoken(fashion_dfm)
-##
-
-library(quanteda.textplots)
-# wordcloud for most used words in the CSR dictionary
-textplot_wordcloud(fashion_csr_all_dfm, max_words = 100,
-                   color = c("grey80", "darkgoldenrod1", "tomato"))
-```
 
 //BBK dict //
 
@@ -484,9 +452,40 @@ fashion_environment_2 <-plot_ly(fashion_BBK_by_group, y = ~`Environmental Percen
         add_markers()
 
 ```
+We conduct the analysis on token level, and not aggregately, to see whether some ESG-related words words appear particularly frequently. 
+
+```{r Wordcloud CSR dictionary, echo = FALSE}
+### Select CSR dictionary tokens ###
+
+## selecting tokens
+fashion_csr_all_tokens <- tokens_select(fashion_tokens, dictionary_csr)
+fashion_csr_hum_tokens <- tokens_select(fashion_tokens, dictionary_csr$`HUMAN RIGHTS`)
+fashion_csr_emp_tokens <- tokens_select(fashion_tokens, dictionary_csr$EMPLOYEE)
+fashion_csr_soc_tokens <- tokens_select(fashion_tokens, dictionary_csr$`SOCIAL AND COMMUNITY`)
+fashion_csr_env_tokens <- tokens_select(fashion_tokens, dictionary_csr$ENVIRONMENT)
+
+## creating dfm
+fashion_dfm <- dfm(fashion_tokens)
+fashion_csr_all_dfm <- dfm(fashion_csr_all_tokens)
+fashion_csr_hum_dfm <- dfm(fashion_csr_hum_tokens)
+fashion_csr_emp_dfm <- dfm(fashion_csr_emp_tokens)
+fashion_csr_soc_dfm <- dfm(fashion_csr_soc_tokens)
+fashion_csr_env_dfm <- dfm(fashion_csr_env_tokens)
+
+## count token
+fashion_count_tokens <- ntoken(fashion_dfm)
+##
+
+library(quanteda.textplots)
+# wordcloud for most used words in the CSR dictionary
+textplot_wordcloud(fashion_csr_all_dfm, max_words = 100,
+                   color = c("grey80", "darkgoldenrod1", "tomato"))
+```
 
 
-####### repeat the same code for energy companies
+####### Energy sector companies
+
+We further repeat the analysis on a sample of N randomly chosen energy sector companies.
 
 ```{r}
 # load excel files with cik numbers for each industry with the companies
@@ -554,7 +553,7 @@ energy_tokens <- energy_tokens %>%
 
 
 
-```{r Loading dictionaries, include = FALSE}
+```{r, include = FALSE}
 
 energy_CSR <- dfm(energy_tokens, dictionary = dictionary_csr) # set up a dfm with word count by category
 
@@ -616,7 +615,7 @@ energy_csr_total <- plot_ly(data = energy_CSR, x = ~year, y = ~relative_overall,
 
 ```
 
-```{r Wordcloud CSR dictionary, echo = FALSE}
+```{r, echo = FALSE}
 ### Select CSR dictionary tokens ###
 
 ## selecting tokens
@@ -642,12 +641,6 @@ textplot_wordcloud(energy_CSR_all_dfm, max_words = 100,
                    color = c("grey80", "darkgoldenrod1", "tomato"))
 ```
 
-//BBK dict //
-
-With the increasing importance of environmental, social and governance (ESG) factors for companies and investors, Baier, Berninger and Kiesel (2020) have recently developed a new ESG content dictionary. The dictionary was trained on the basis of financial reports and is intended as a tool to reflect the ESG activities of companies. Each of the 482 words occurring in the dictionary is considered as a ESG-term that is mainly used in the context of ESG. The index consists of three main topics: governance, environmental and social. Further there are 11 categories and 35 subcategories that allows a very precise search for different aspects in the field of ESG.
-
-reference:
-- Baier, Berninger & Kiesel (2020)
 
 ```{r}
 
@@ -747,7 +740,10 @@ industry_soc_comparison <- plot_ly() %>%
 #### Limitations ####
 
 
-
+#### Further actions ####
+We further plan to expand the analysis by:
+1) Adding 1-2 more sectors, since between-industry comparison depicts that there are indeed differences in attention to ESG between different business sectors.
+2) 
 
 #### Appendix ####
 
