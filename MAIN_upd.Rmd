@@ -106,6 +106,8 @@ We took the 10K filings back to the year 2004. This leads to 18 reports if the o
 
 #### Research question ####
 
+We will looking at the following two main questions? 
+
 Is there a correlation between the wording of a 10-K report and the ESG-score of a company?
 How does the wording of the three ESG dimensions (Environment, Social, Governance) differ across industries? 
 
