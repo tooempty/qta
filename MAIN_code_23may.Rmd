@@ -21,29 +21,21 @@ library(ggplot2)
 library(plotly)
 library(quanteda.textstats)
 library(quanteda.textplots)
-
-
 # load excel files with cik numbers for each industry with the companies
 fashion <- read_excel(here("fashion_cik.xlsx"), sheet = "Sheet1", col_names = TRUE)
 fashion <- fashion[, c(1, 4:14)]
-
 # energy <- read_excel()
 # bev <- read_excel()
-
 # keeping only the cik number
 fashion_cik <- fashion$CIK
 # energy_cik <- energy[,14]
 # bev_cik <- bev[,4]
-
 # load the 10Ks from downloaded files
-
 fashion_10k <- NULL
 energy_10k <- NULL
 bev_10k <- NULL
-
 # loop that collects all reports for all companies for each industry
 # this will take some minutes!!!
-
 # fashion (should be 436 observations)
 for (i in fashion_cik) {
   output <- readtext(here("Form10-K", i))
@@ -51,24 +43,9 @@ for (i in fashion_cik) {
 }
 rm(output)
 
-# energy
-#for (i in energy_cik$CIK) {
- # output <- readtext(here("energy_10ks", i))
- # energy_10k <- rbind(energy_10k, output)
-#}
-rm(output)
-
-# beverages
-#for (i in industry_cik$CIK) {
- # output <- readtext(here("bev_10ks", i))
-  #bev_10k <- rbind(bev_10k, output)
-#}
-
 # simple cleaning
 fashion_10k$text <- str_remove_all(fashion_10k$text, "\n•")
 fashion_10k$text <- str_remove_all(fashion_10k$text, "\n")
-#energy_10k
-#bev_10k
 
 # define columns into cik, report type and report year
 fashion_10k <- separate(
@@ -78,9 +55,6 @@ fashion_10k <- separate(
   sep = "_",
   remove = TRUE)
 
-#energy
-#beverages
-
 # only keep year
 #keep the year and not the full date
 fashion_10k <- separate(
@@ -89,7 +63,6 @@ fashion_10k <- separate(
   into = c("year", NA),
   sep = "-",
   remove = TRUE)
-
 #energy
 #beverages
 ```
@@ -108,21 +81,15 @@ We took the 10K filings back to the year 2004. This leads to 18 reports if the o
 #### Readability and the nature of 10K fillings ####
 ```{r Creating a corpus and apply the readability measures, include=FALSE}
 # creating a corpus
-
 fashion_corp <- corpus(fashion_10k)
 #energy
 #industry3
-
-
 # apply Flesch readability measure (takes a few minutes)
-
 fashion_rd_flesch <- fashion_corp %>%
   textstat_readability(measure = "Flesch", remove_hyphens = TRUE)
 #energy
 # industry3
-
 # apply FOG readability measure (takes a few minutes)
-
 fashion_rd_fog <- fashion_corp %>%
   textstat_readability(measure = "FOG", remove_hyphens = TRUE)
 #energy
@@ -137,7 +104,6 @@ references:
 
 
 ```{r Readability plots Flesch, echo = FALSE, fig.width = 10 , fig.fullwidth=TRUE}
-
 # all companies, all years
 ggplotly(ggplot(fashion_rd_flesch, aes(x=fashion_10k$year, y =Flesch, colour=fashion_10k$cik)) + geom_point() + ggtitle("Flesch - Readability for fashion companies"), tooltip = c("colour", "y", "x"))
 ```
@@ -151,7 +117,6 @@ References:
 - Biddle, Gary, Gilles Hilary, and Rodrigo Verdi, 2009, How does financial reporting quality relate to investment efficiency? Journal of Accounting and Economics 48, 112–131.
 
 ```{r Readability plots FOG, echo = FALSE, fig.width = 10 , fig.fullwidth=TRUE}
-
 # all companies, all years
 ggplotly(ggplot(fashion_rd_fog, aes(x=fashion_10k$year, y =FOG, color=fashion_10k$cik)) + geom_point() + ggtitle("FOG - Readability for fashion companies"), tooltip = c("colour", "y", "x"))
 ```
@@ -171,21 +136,17 @@ fashion_2004 <- fashion_10k %>%
   filter(year == 2004)
 fashion_2020 <- fashion_10k %>%
   filter(year == 2020)
-
 ## create corpus
 fashion_04_corp <- corpus(fashion_2004)
 fashion_20_corp <- corpus(fashion_2020)
-
 ## Tokenization
 fashion_04_tokens <- fashion_04_corp %>%
   tokens(remove_punct = TRUE, # remove punctuation
          remove_numbers = TRUE, # remove numbers
          remove_symbols = TRUE) %>% # remove symbols
   tokens_tolower() # everything to lower cases
-
 fashion_04_tokens <- fashion_04_tokens %>%
   tokens_remove(stopwords("english"))
-
 fashion_20_tokens <- fashion_20_corp %>%
   tokens(remove_punct = TRUE, # remove punctuation
          remove_numbers = TRUE, # remove numbers
@@ -210,13 +171,12 @@ fashion_20_ca2 <- data.frame(dim1 = coef(fashion_20_ca, doc_dim = 1)$coef_docume
 
 A conductued correspondence analysis supports the picture of higher differences in 10Ks in more recent years compared to current years as concluded by the readability measures. A graphical comparison of a two-dimensional correspondence analysis of the years 2004 and 2020 reveals a greater dispersion and thus greater differences in the 10K reports for the year 2004. This also provides an indication that a greater standardization of the filings could have taken place. However, some companies are always classified as different by the analysis over the years. Lakeland Industries Inc. (text7 in 2004 and text11 in 2020) shows a strong two-dimensional difference across all years. It is also the company which has the highest complexity according the Flesch score. Another company that stands out across multiple years is Unifi Inc. (text18 in 2004 and text24 in 2020). The 10Ks form Unifi seems to be (at least in one dimension) different from the others and different than the ones from Lakeland Industries.
 
-```{r Plot 2D correspondance analysis, echo = FALSE, fig.width = 10 , fig.fullwidth=TRUE}
+```{r Plot 2D correspondance analysis, echo = FALSE}
 fashion_04_ca2 %>%
   ggplot(aes(x=dim1, y=dim2)) +
   geom_text(aes(label = doc)) +
   theme_classic() +
   labs(x="Dimension 1", y="Dimension 2")
-
 fashion_20_ca2 %>%
   ggplot(aes(x=dim1, y=dim2)) +
   geom_text(aes(label = doc)) +
@@ -234,13 +194,10 @@ fashion_tokens <- fashion_corp %>%
          remove_url = TRUE) %>% # remove symbols
   tokens_tolower() # everything to lower cases
 # takes some minutes!
-
 words_to_be_removed <- c(stopwords("english"), "million", "fiscal", "january", "february",
            "march", "april", "may", "june", "july", "august", "september",
            "october", "november", "december", "business", "net", "s")
-
 # //KEEP IN MIND// to update the list in the appendix of removed words
-
 fashion_tokens <- fashion_tokens %>%
   tokens_remove(words_to_be_removed)
 ```
@@ -255,30 +212,22 @@ If we remove all the stopwords and other terms that are insignificant for our an
 reference:
 - Pencle & Malescu (2016)
 
-```{r, include = FALSE}
-
+```{r Loading dictionaries, include = FALSE}
 ### Load CSR dict ###
 dictionary_csr <- dictionary(file = "CorporateSocialResponsibility.cat")
 # load the 1st dictionary CSR
-
 fashion_CSR <- dfm(fashion_tokens, dictionary = dictionary_csr) # set up a dfm with word count by category
-
 fashion_CSR <- convert(fashion_CSR, to = "data.frame") # convert it to df for easy merge
-
 fashion_CSR <- cbind(fashion_CSR, fashion_10k[,c(1,3)]) # merge with cik and year data
-
 count_tokens_fashion <- ntoken(fashion_tokens) #counts total tokens in the text
 count_tokens_fashion <- as.data.frame(count_tokens_fashion) # convert to df for easy merge
-
 fashion_CSR <- cbind(fashion_CSR, count_tokens_fashion) # merge with the token count
 # find the relative ESG-related words 
-
 fashion_CSR_total <- fashion_CSR %>% 
         select(ENVIRONMENT, EMPLOYEE, 'HUMAN RIGHTS', 'SOCIAL AND COMMUNITY') %>% 
         rowSums(na.rm=TRUE)
   
 fashion_CSR <- cbind(fashion_CSR, fashion_CSR_total) 
-
 rm(fashion_CSR_total)
   
 fashion_CSR <- fashion_CSR %>% mutate(relative_env = ENVIRONMENT/count_tokens_fashion,
@@ -286,38 +235,35 @@ fashion_CSR <- fashion_CSR %>% mutate(relative_env = ENVIRONMENT/count_tokens_fa
                                               relative_empl = EMPLOYEE/count_tokens_fashion,
                                               relative_humans = `HUMAN RIGHTS`/count_tokens_fashion,
                                               relative_overall = fashion_CSR_total/count_tokens_fashion)
-
 ```
 
-```{r}
+```{r Correction wrong file name, include = FALSE}
 wrong_year <- which(fashion_CSR$year == "2016–0.html") # there is a mis-specification in splitting of 2016 
 fashion_CSR[wrong_year, 7] = 2016 # re-write the value in the cell as 2016 correctly
 rm(wrong_year) #remove the unnecessary variable
+```
 
+```{r Relative ESG wording CSR dict for fashion, echo = FALSE}
 fashion_csr_env <- plot_ly(data = fashion_CSR, x = ~year, y = ~relative_env, color = ~cik) %>% 
         add_markers() %>%
         layout(title = 'Share of environment wording. CSR dictionary',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
-
 fashion_csr_soc <- plot_ly(data = fashion_CSR, x = ~year, y = ~relative_soc, color = ~cik) %>% 
         add_markers() %>%
         layout(title = 'Share of social wording. CSR dictionary',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
-
 fashion_csr_empl <- plot_ly(data = fashion_CSR, x = ~year, y = ~relative_empl, color = ~cik) %>% 
         add_markers() %>%
         layout(title = 'Share of employee-related wording. CSR dictionary',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
-
 fashion_csr_humans <- plot_ly(data = fashion_CSR, x = ~year, y = ~relative_humans, color = ~cik) %>% 
        add_markers() %>%
         layout(title = 'Share of human-related wording. CSR dictionary',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
-
 fashion_csr_total <- plot_ly(data = fashion_CSR, x = ~year, y = ~relative_overall, color = ~cik) %>% 
       add_markers() %>%      
       layout(title = 'Share of ESG wording. CSR dictionary',
@@ -333,72 +279,55 @@ With the increasing importance of environmental, social and governance (ESG) fac
 reference:
 - Baier, Berninger & Kiesel (2020)
 
-```{r}
-
+```{r Loading BBK dict, include = FALSE}
 ### Load BBK dict ###
 dictionary_bbk <- read_excel(here("BaierBerningerKiesel.xlsx"), sheet = "Sheet1", col_names = TRUE)
 # load the 2nd dictionary BBK Excel-file
-
 Governance_BBK <- dictionary_bbk[dictionary_bbk$Topic == 'Governance',]
 Governance_BBK <- Governance_BBK[1]
-
 Environmental_BBK <- dictionary_bbk[dictionary_bbk$Topic == 'Environmental',]
 Environmental_BBK <- Environmental_BBK[1]
-
 Social_BBK <- dictionary_bbk[dictionary_bbk$Topic == 'Social',]
 Social_BBK <- Social_BBK[1]
-
 dictionary_BBK <- dictionary(list(Governance = Governance_BBK, 
                                   Environmental = Environmental_BBK, 
                                   Social = Social_BBK))
-
 rm(Governance_BBK, Environmental_BBK, Social_BBK)
-
 fashion_BBK <- dfm(fashion_tokens, dictionary = dictionary_BBK, valuetype = "glob") # set up a dfm with word count by category
-
 fashion_BBK <- convert(fashion_BBK, to = "data.frame") # convert it to df for easy merge
-
 fashion_BBK <- cbind(fashion_BBK, fashion_10k[,c(1,3)]) # merge with cik and year data
 fashion_BBK <- cbind(fashion_BBK, count_tokens_fashion) # merge with the token count
 # fashion_BBK$year <- as.Date(fashion_BBK$year, format="%d/%m/%Y") 
-
 # find the relative ESG-related words 
-
 total_ESG_only_BBK <- fashion_BBK %>% 
   select(Governance.Word, Environmental.Word, Social.Word) %>% 
   rowSums(na.rm=TRUE)
-
 fashion_BBK <- cbind(fashion_BBK, total_ESG_only_BBK) 
-
 fashion_BBK <- fashion_BBK %>% mutate(relative_govern = Governance.Word/count_tokens_fashion,
                                       relative_env = Environmental.Word/count_tokens_fashion,
                                       relative_soc = Social.Word/count_tokens_fashion,
                                       relative_overall = total_ESG_only_BBK/count_tokens_fashion)
-
 wrong_year <- which(fashion_BBK$year == "2016–0.html") # there is a mis-specification in splitting of 2016 
 fashion_BBK[wrong_year, 6] = 2016 # re-write the value in the cell as 2016 correctly
 rm(wrong_year) #remove the unnecessary variable
 ```
 
-```{r, include = TRUE}
+```{r Relative ESG wording BBK dict for fashion, echo = FALSE}
 fashion_bbk_env <- plot_ly(data = fashion_BBK, x = ~year, y = ~relative_env, color = ~cik) %>% 
   add_markers() %>%
         layout(title = 'Share of environment wording. BBK dictionary',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
-
 fashion_bbk_soc <-plot_ly(data = fashion_BBK, x = ~year, y = ~relative_soc, color = ~cik) %>% 
   add_markers() %>%
         layout(title = 'Share of social wording. BBK dictionary',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
-
 fashion_bbk_govern <- plot_ly(data = fashion_BBK, x = ~year, y = ~relative_govern, color = ~cik) %>% 
   add_markers() %>%
         layout(title = 'Share of corporate governance wording. BBK dictionary',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
-
 fashion_bbk_total <- plot_ly(data = fashion_BBK, x = ~year, y = ~relative_overall, color = ~cik) %>% 
   add_markers() %>%
         layout(title = 'Share of ESG wording. CSR dictionary',
@@ -409,61 +338,48 @@ fashion_bbk_total <- plot_ly(data = fashion_BBK, x = ~year, y = ~relative_overal
 #### Comparison with ESG-Ratings ####
 Since our goal is to analyse whether 10-k reports carry valuable information regarding the company's ESG values, we further compare the ESG ratings received by the companies to the relative ESG sentiment from the 10-k report. 
 
-```{r}
+```{r Read file with ESG scores, include = FALSE}
 ## read the ESG scores file
-ESG_scores_fashion <- read_excel(here("ESG_scores_fashion.xlsx"), sheet = "Scores", col_names = TRUE)
+ESG_scores_fashion <- read_excel(here("ESG_scores_fashion.xlsx"), sheet = "ESG", col_names = TRUE)
 names(ESG_scores_fashion)[3] <- "cik" #rename the cik column for convenience
 ESG_scores_fashion$cik <- as.character(ESG_scores_fashion$cik)
-
 fashion_BBK_by_group <- fashion_BBK %>% filter(year > 2017) %>% #filter out reasonable observations
                                 group_by(cik) %>% # creates a table of mean ESG scores through time 
                                 summarise(mean_env = mean(relative_env),
                                           mean_soc = mean(relative_soc), 
                                           mean_gov = mean(relative_govern),
                                           mean_total = mean(relative_overall))
-
 fashion_BBK_by_group$cik <- as.character(fashion_BBK_by_group$cik) #
-
 fashion_BBK_by_group <- ESG_scores_fashion %>% right_join(fashion_BBK_by_group, by = "cik")
-fashion_BBK_by_group$`Refinitiv ESG Score (FY0)` <- as.numeric(fashion_BBK_by_group$`Refinitiv ESG Score (FY0)`)
-
-# since the name of Refinitive columns is too long, we need to remove the (FY0) part
-
-
+# fashion_BBK_by_group$`Refinitiv ESG Score (FY0)` <- as.numeric(fashion_BBK_by_group$`Refinitiv ESG Score (FY0)`)
+# since the name of Refinitive columns is too long, we need to remove the (FY0) part -> changed it directly on the file //TO DO// see if it works
 ```
 
-```{r, include = TRUE}
+```{r Comparison ESG Refinitive Score and ESG wording, echo = False}
 # overall Refinitive score vs. overall percentage of esg wording
 fashion_refinitive_total <- plot_ly(fashion_BBK_by_group, y = ~`Refinitiv ESG Score (FY0)`, x = ~mean_total) %>% 
         add_markers()
-
 fashion_systainalytics_total <- plot_ly(fashion_BBK_by_group, y = ~`Sustainalytics ESG Risk Ratings (2021)`, x = ~mean_total) %>% 
         add_markers()
-
 # society-related wording only
 fashion_social <- plot_ly(fashion_BBK_by_group, y = ~`Social Percentage`, x = ~(mean_soc+mean_gov)) %>% 
         add_markers()
-
 fashion_environment <- plot_ly(fashion_BBK_by_group, y = ~fashion_BBK_by_group[5], x = ~mean_total) %>% 
         add_markers()
-
 # environment-related wording only
 fashion_environment_2 <-plot_ly(fashion_BBK_by_group, y = ~`Environmental Percentage`, x = ~mean_env) %>% 
         add_markers()
-
 ```
-We conduct the analysis on token level, and not aggregately, to see whether some ESG-related words words appear particularly frequently. 
+We conduct the analysis on token level, and not aggregated, to see whether some ESG-related words words appear particularly frequently. 
 
-```{r Wordcloud CSR dictionary, echo = FALSE}
+```{r Wordcloud CSR dictionary for fashion, echo = FALSE}
 ### Select CSR dictionary tokens ###
-
 ## selecting tokens
 fashion_csr_all_tokens <- tokens_select(fashion_tokens, dictionary_csr)
 fashion_csr_hum_tokens <- tokens_select(fashion_tokens, dictionary_csr$`HUMAN RIGHTS`)
 fashion_csr_emp_tokens <- tokens_select(fashion_tokens, dictionary_csr$EMPLOYEE)
 fashion_csr_soc_tokens <- tokens_select(fashion_tokens, dictionary_csr$`SOCIAL AND COMMUNITY`)
 fashion_csr_env_tokens <- tokens_select(fashion_tokens, dictionary_csr$ENVIRONMENT)
-
 ## creating dfm
 fashion_dfm <- dfm(fashion_tokens)
 fashion_csr_all_dfm <- dfm(fashion_csr_all_tokens)
@@ -471,11 +387,9 @@ fashion_csr_hum_dfm <- dfm(fashion_csr_hum_tokens)
 fashion_csr_emp_dfm <- dfm(fashion_csr_emp_tokens)
 fashion_csr_soc_dfm <- dfm(fashion_csr_soc_tokens)
 fashion_csr_env_dfm <- dfm(fashion_csr_env_tokens)
-
 ## count token
 fashion_count_tokens <- ntoken(fashion_dfm)
 ##
-
 library(quanteda.textplots)
 # wordcloud for most used words in the CSR dictionary
 textplot_wordcloud(fashion_csr_all_dfm, max_words = 100,
@@ -483,34 +397,29 @@ textplot_wordcloud(fashion_csr_all_dfm, max_words = 100,
 ```
 
 
-####### Energy sector companies
+#### Energy sector companies #######
 
-We further repeat the analysis on a sample of N randomly chosen energy sector companies.
+We further repeat the analysis on a sample of 30 randomly chosen energy sector companies.
 
-```{r}
+```{r Loading files for energy companies, include = FALSE}
 # load excel files with cik numbers for each industry with the companies
-energy <- read_excel(here("energy_cik.xlsx"), sheet = "data_for_r", col_names = TRUE)
+energy <- read_excel(here("energy_cik.xlsx"), sheet = "Sheet1", col_names = TRUE)
 energy <- energy[, c(1, 4:14)]
-
 # keeping only the cik number
 energy_cik <- energy$CIK
 energy_cik<-as.data.frame(energy_cik)
 # load the 10Ks from downloaded files
 energy_10k <- NULL
-
 # loop that collects all reports for all companies for each industry
 # this will take some minutes!!!
 for (i in energy_cik) {
   output <- readtext(here("Form10-K_energy", i))
   energy_10k <- rbind(energy_10k, output)
 }
-
 rm(output)
-
 # simple cleaning
 energy_10k$text <- str_remove_all(energy_10k$text, "\n•")
 energy_10k$text <- str_remove_all(energy_10k$text, "\n")
-
 # define columns into cik, report type and report year
 energy_10k <- separate(
   energy_10k,
@@ -518,7 +427,6 @@ energy_10k <- separate(
   into = c("cik", "type", "year", NA),
   sep = "_",
   remove = TRUE)
-
 # only keep year
 #keep the year and not the full date
 energy_10k <- separate(
@@ -527,12 +435,10 @@ energy_10k <- separate(
   into = c("year", NA),
   sep = "-",
   remove = TRUE)
-
 ```
 
-```{r}
+```{r Creating a Corpus for energy companies, include = FALSE}
 energy_corp <- corpus(energy_10k)
-
 energy_tokens <- energy_corp %>%
   tokens(remove_punct = TRUE, # remove punctuation
          remove_numbers = TRUE, # remove numbers
@@ -540,39 +446,27 @@ energy_tokens <- energy_corp %>%
          remove_url = TRUE) %>% # remove symbols
   tokens_tolower() # everything to lower cases
 # takes some minutes!
-
 words_to_be_removed <- c(stopwords("english"), "million", "fiscal", "january", "february",
            "march", "april", "may", "june", "july", "august", "september",
            "october", "november", "december", "business", "net", "s")
-
 # //KEEP IN MIND// to update the list in the appendix of removed words
-
 energy_tokens <- energy_tokens %>%
   tokens_remove(words_to_be_removed)
 ```
 
-
-
-```{r, include = FALSE}
-
+```{r Apply CSR dict for energy, include = FALSE}
 energy_CSR <- dfm(energy_tokens, dictionary = dictionary_csr) # set up a dfm with word count by category
-
 energy_CSR <- convert(energy_CSR, to = "data.frame") # convert it to df for easy merge
-
 energy_CSR <- cbind(energy_CSR, energy_10k[,c(1,3)]) # merge with cik and year data
-
 count_tokens_energy <- ntoken(energy_tokens) #counts total tokens in the text
 count_tokens_energy <- as.data.frame(count_tokens_energy) # convert to df for easy merge
-
 energy_CSR <- cbind(energy_CSR, count_tokens_energy) # merge with the token count
 # find the relative ESG-related words 
-
 energy_CSR_total <- energy_CSR %>% 
         select(ENVIRONMENT, EMPLOYEE, 'HUMAN RIGHTS', 'SOCIAL AND COMMUNITY') %>% 
         rowSums(na.rm=TRUE)
   
 energy_CSR <- cbind(energy_CSR, energy_CSR_total) 
-
 rm(energy_CSR_total)
   
 energy_CSR <- energy_CSR %>% mutate(relative_env = ENVIRONMENT/count_tokens_energy,
@@ -582,49 +476,42 @@ energy_CSR <- energy_CSR %>% mutate(relative_env = ENVIRONMENT/count_tokens_ener
                                               relative_overall = energy_CSR_total/count_tokens_energy)
 ```
 
-```{r, include = TRUE}
+```{r Relative ESG wording CSR dict for energy, echo = FALSE}
 energy_csr_env <- plot_ly(data = energy_CSR, x = ~year, y = ~relative_env, color = ~cik) %>% 
         add_markers() %>%
         layout(title = 'Share of environment wording. CSR dictionary.Energy',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
-
 energy_csr_soc <- plot_ly(data = energy_CSR, x = ~year, y = ~relative_soc, color = ~cik) %>% 
         add_markers() %>%
         layout(title = 'Share of social wording. CSR dictionary. Energy',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
-
 energy_csr_empl <- plot_ly(data = energy_CSR, x = ~year, y = ~relative_empl, color = ~cik) %>% 
         add_markers() %>%
         layout(title = 'Share of employee-related wording. CSR dictionary. Energy',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
-
 energy_csr_humans <- plot_ly(data = energy_CSR, x = ~year, y = ~relative_humans, color = ~cik) %>% 
        add_markers() %>%
         layout(title = 'Share of human-related wording. CSR dictionary. Energy',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
-
 energy_csr_total <- plot_ly(data = energy_CSR, x = ~year, y = ~relative_overall, color = ~cik) %>% 
       add_markers() %>%      
       layout(title = 'Share of ESG wording. CSR dictionary. Energy',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
-
 ```
 
-```{r, echo = FALSE}
+```{r Wordcloud CSR dictionary for energy, echo = FALSE}
 ### Select CSR dictionary tokens ###
-
 ## selecting tokens
 energy_CSR_all_tokens <- tokens_select(energy_tokens, dictionary_csr)
 energy_CSR_hum_tokens <- tokens_select(energy_tokens, dictionary_csr$`HUMAN RIGHTS`)
 energy_CSR_emp_tokens <- tokens_select(energy_tokens, dictionary_csr$EMPLOYEE)
 energy_CSR_soc_tokens <- tokens_select(energy_tokens, dictionary_csr$`SOCIAL AND COMMUNITY`)
 energy_CSR_env_tokens <- tokens_select(energy_tokens, dictionary_csr$ENVIRONMENT)
-
 ## creating dfm
 energy_dfm <- dfm(energy_tokens)
 energy_CSR_all_dfm <- dfm(energy_CSR_all_tokens)
@@ -632,59 +519,47 @@ energy_CSR_hum_dfm <- dfm(energy_CSR_hum_tokens)
 energy_CSR_emp_dfm <- dfm(energy_CSR_emp_tokens)
 energy_CSR_soc_dfm <- dfm(energy_CSR_soc_tokens)
 energy_CSR_env_dfm <- dfm(energy_CSR_env_tokens)
-
 ## count token
 energy_count_tokens <- ntoken(energy_dfm)
-
 # wordcloud for most used words in the CSR dictionary
 textplot_wordcloud(energy_CSR_all_dfm, max_words = 100,
                    color = c("grey80", "darkgoldenrod1", "tomato"))
 ```
 
 
-```{r}
-
+```{r Preparation relative ESG wording BBK dict for energy, inlcude = FALSE}
 energy_BBK <- dfm(energy_tokens, dictionary = dictionary_BBK, valuetype = "glob") # set up a dfm with word count by category
-
 energy_BBK <- convert(energy_BBK, to = "data.frame") # convert it to df for easy merge
-
 energy_BBK <- cbind(energy_BBK, energy_10k[,c(1,3)]) # merge with cik and year data
 energy_BBK <- cbind(energy_BBK, count_tokens_energy) # merge with the token count
 # energy_BBK$year <- as.Date(energy_BBK$year, format="%d/%m/%Y") 
-
 # find the relative ESG-related words 
-
 total_ESG_only_BBK <- energy_BBK %>% 
   select(Governance.Word, Environmental.Word, Social.Word) %>% 
   rowSums(na.rm=TRUE)
-
 energy_BBK <- cbind(energy_BBK, total_ESG_only_BBK) 
-
 energy_BBK <- energy_BBK %>% mutate(relative_govern = Governance.Word/count_tokens_energy,
                                       relative_env = Environmental.Word/count_tokens_energy,
                                       relative_soc = Social.Word/count_tokens_energy,
                                       relative_overall = total_ESG_only_BBK/count_tokens_energy)
 ```
 
-```{r, include = TRUE}
+```{r Relative ESG wording BBK dict for energy, include = TRUE}
 energy_bbk_env <- plot_ly(data = energy_BBK, x = ~year, y = ~relative_env, color = ~cik) %>% 
   add_markers() %>%
         layout(title = 'Share of environment wording. BBK dictionary. Energy',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
-
 energy_bbk_soc <- plot_ly(data = energy_BBK, x = ~year, y = ~relative_soc, color = ~cik) %>% 
   add_markers() %>%
         layout(title = 'Share of social wording. BBK dictionary',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
-
 energy_bbk_govern <- plot_ly(data = energy_BBK, x = ~year, y = ~relative_govern, color = ~cik) %>% 
   add_markers() %>%
         layout(title = 'Share of corporate governance wording. BBK dictionary',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
-
 energy_bbk_total <- plot_ly(data = energy_BBK, x = ~year, y = ~relative_overall, color = ~cik) %>% 
   add_markers() %>%
         layout(title = 'Share of ESG wording. CSR dictionary',
@@ -694,20 +569,17 @@ energy_bbk_total <- plot_ly(data = energy_BBK, x = ~year, y = ~relative_overall,
 
 #### Trends between industries ####
 
-```{r}
+```{r Time evolution for fashion, echo=FALSE}
 fashion_time_evol <- fashion_BBK %>% group_by(year) %>% # creates a table of mean ESG scores through time 
                                 summarise(mean_env = mean(relative_env),
                                           mean_soc = mean(relative_soc), 
                                           mean_gov = mean(relative_govern),
                                           mean_total = mean(relative_overall))
-
 energy_time_evol <- energy_BBK %>% group_by(year) %>% # creates a table of mean ESG scores through time 
                                 summarise(mean_env = mean(relative_env),
                                           mean_soc = mean(relative_soc), 
                                           mean_gov = mean(relative_govern),
                                           mean_total = mean(relative_overall))
-
-
 industry_total_comparison <- plot_ly() %>%
     add_markers(data=energy_time_evol, name="Energy", x = ~year, y = ~mean_total) %>%
     add_markers(data=fashion_time_evol, name="Fashion", x = ~year, y = ~mean_total) %>% 
@@ -715,8 +587,6 @@ industry_total_comparison <- plot_ly() %>%
         layout(title = 'ESG wording evolution. Industry comparison',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'mean % of ESG wording', tickformat = '.3%', hoverformat = ',.2%'))
-
-
 industry_envir_comparison <- plot_ly() %>%
     add_markers(data=energy_time_evol, name="Energy", x = ~year, y = ~mean_env) %>%
     add_markers(data=fashion_time_evol, name="Fashion", x = ~year, y = ~mean_env) %>% 
@@ -724,8 +594,6 @@ industry_envir_comparison <- plot_ly() %>%
         layout(title = 'Environment wording evolution. Industry comparison',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'mean % of ESG wording', tickformat = '.3%', hoverformat = ',.2%'))
-
-
 industry_soc_comparison <- plot_ly() %>%
     add_markers(data=energy_time_evol, name="Energy", x = ~year, y = ~mean_soc) %>%
     add_markers(data=fashion_time_evol, name="Fashion", x = ~year, y = ~mean_soc) %>% 
@@ -733,7 +601,6 @@ industry_soc_comparison <- plot_ly() %>%
         layout(title = 'Social wording evolution. Industry comparison',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'mean % of ESG wording', tickformat = '.3%', hoverformat = ',.2%'))
-
 ```
 
 
@@ -743,7 +610,7 @@ industry_soc_comparison <- plot_ly() %>%
 #### Further actions ####
 We further plan to expand the analysis by:
 1) Adding 1-2 more sectors, since between-industry comparison depicts that there are indeed differences in attention to ESG between different business sectors.
-2) 
+2)
 
 #### Appendix ####
 
@@ -767,4 +634,3 @@ ggplotly(ggplotly(ggplot(fashion_csr_all_top75_dfm, aes(x = feature, y = frequen
          + geom_point(color="steelblue") +
            theme(axis.text.x = element_text(angle = 90, hjust = 1))))
 ```
-
