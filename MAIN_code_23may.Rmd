@@ -26,18 +26,22 @@ library(ggplot2)
 library(plotly)
 library(quanteda.textstats)
 library(quanteda.textplots)
+
 # load excel files with cik numbers for each industry with the companies
 fashion <- read_excel(here("fashion_cik.xlsx"), sheet = "Sheet1", col_names = TRUE)
 fashion <- fashion[, c(1, 4:14)]
+
 # keeping only the cik number
 fashion_cik <- fashion$CIK
+
 # load the 10Ks from downloaded files
 fashion_10k <- NULL
+
 # loop that collects all reports for all companies for each industry
 # this will take some minutes!!!
 # fashion (should be 436 observations)
 for (i in fashion_cik) {
-  output <- readtext(here("Form10-K", i))
+  output <- readtext(here("fashion_10k", i))
   fashion_10k <- rbind(fashion_10k, output)
 }
 rm(output)
@@ -55,7 +59,7 @@ fashion_10k <- separate(
   remove = TRUE)
 
 # only keep year
-#keep the year and not the full date
+# keep the year and not the full date
 fashion_10k <- separate(
   fashion_10k,
   "year",
@@ -94,7 +98,6 @@ fashion_rd_flesch <- fashion_corp %>%
 # apply FOG readability measure (takes a few minutes)
 fashion_rd_fog <- fashion_corp %>%
   textstat_readability(measure = "FOG", remove_hyphens = TRUE)
-
 ```
 //Flesch//
 
@@ -250,26 +253,35 @@ fashion_csr_env <- plot_ly(data = fashion_CSR, x = ~year, y = ~relative_env, col
         layout(title = 'Share of environment wording. CSR dictionary',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
+fashion_csr_env
+
 fashion_csr_soc <- plot_ly(data = fashion_CSR, x = ~year, y = ~relative_soc, color = ~cik) %>% 
         add_markers() %>%
         layout(title = 'Share of social wording. CSR dictionary',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
+fashion_csr_soc
+
 fashion_csr_empl <- plot_ly(data = fashion_CSR, x = ~year, y = ~relative_empl, color = ~cik) %>% 
         add_markers() %>%
         layout(title = 'Share of employee-related wording. CSR dictionary',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
-fashion_csr_humans <- plot_ly(data = fashion_CSR, x = ~year, y = ~relative_humans, color = ~cik) %>% 
+fashion_csr_empl
+
+fashion_csr_humans <- plot_ly(data = fashion_CSR, x = ~year, y = ~relative_humans, color = ~cik) %>%
        add_markers() %>%
         layout(title = 'Share of human-related wording. CSR dictionary',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
-fashion_csr_total <- plot_ly(data = fashion_CSR, x = ~year, y = ~relative_overall, color = ~cik) %>% 
+fashion_csr_humans
+
+fashion_csr_total <- plot_ly(data = fashion_CSR, x = ~year, y = ~relative_overall, color = ~cik) %>%
       add_markers() %>%      
       layout(title = 'Share of ESG wording. CSR dictionary',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
+fashion_csr_total
 ```
 
 
@@ -319,21 +331,28 @@ fashion_bbk_env <- plot_ly(data = fashion_BBK, x = ~year, y = ~relative_env, col
         layout(title = 'Share of environment wording. BBK dictionary',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
+fashion_bbk_env
+
 fashion_bbk_soc <-plot_ly(data = fashion_BBK, x = ~year, y = ~relative_soc, color = ~cik) %>% 
   add_markers() %>%
         layout(title = 'Share of social wording. BBK dictionary',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
-fashion_bbk_govern <- plot_ly(data = fashion_BBK, x = ~year, y = ~relative_govern, color = ~cik) %>% 
+fashion_bbk_soc
+
+fashion_bbk_govern <- plot_ly(data = fashion_BBK, x = ~year, y = ~relative_govern, color = ~cik) %>%
   add_markers() %>%
         layout(title = 'Share of corporate governance wording. BBK dictionary',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
-fashion_bbk_total <- plot_ly(data = fashion_BBK, x = ~year, y = ~relative_overall, color = ~cik) %>% 
+fashion_bbk_govern
+
+fashion_bbk_total <- plot_ly(data = fashion_BBK, x = ~year, y = ~relative_overall, color = ~cik) %>%
   add_markers() %>%
         layout(title = 'Share of ESG wording. CSR dictionary',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
+fashion_bbk_total
 ```
 
 #### Comparison with ESG-Ratings ####
@@ -356,20 +375,29 @@ fashion_BBK_by_group <- ESG_scores_fashion %>% right_join(fashion_BBK_by_group, 
 # since the name of Refinitive columns is too long, we need to remove the (FY0) part -> changed it directly on the file //TO DO// see if it works
 ```
 
-```{r Comparison ESG Refinitive Score and ESG wording, echo = False}
+```{r Comparison ESG Refinitive Score and ESG wording, echo = FALSE}
 # overall Refinitive score vs. overall percentage of esg wording
 fashion_refinitive_total <- plot_ly(fashion_BBK_by_group, y = ~`Refinitiv ESG Score (FY0)`, x = ~mean_total) %>% 
         add_markers()
+fashion_refinitive_total
+
 fashion_systainalytics_total <- plot_ly(fashion_BBK_by_group, y = ~`Sustainalytics ESG Risk Ratings (2021)`, x = ~mean_total) %>% 
         add_markers()
+fashion_systainalytics_total
+
 # society-related wording only
 fashion_social <- plot_ly(fashion_BBK_by_group, y = ~`Social Percentage`, x = ~(mean_soc+mean_gov)) %>% 
         add_markers()
+fashion_social
+
 fashion_environment <- plot_ly(fashion_BBK_by_group, y = ~fashion_BBK_by_group[5], x = ~mean_total) %>% 
         add_markers()
+fashion_environment
+
 # environment-related wording only
 fashion_environment_2 <-plot_ly(fashion_BBK_by_group, y = ~`Environmental Percentage`, x = ~mean_env) %>% 
         add_markers()
+fashion_environment_2
 ```
 We conduct the analysis on token level, and not aggregated, to see whether some ESG-related words words appear particularly frequently. 
 
@@ -453,7 +481,6 @@ words_to_be_removed <- c(stopwords("english"), "million", "fiscal", "january", "
 # //KEEP IN MIND// to update the list in the appendix of removed words
 energy_tokens <- energy_tokens %>%
   tokens_remove(words_to_be_removed)
-
 # apply Flesch readability measure (takes a few minutes)
 energy_rd_flesch <- energy_corp %>%
   textstat_readability(measure = "Flesch", remove_hyphens = TRUE)
@@ -504,26 +531,35 @@ energy_csr_env <- plot_ly(data = energy_CSR, x = ~year, y = ~relative_env, color
         layout(title = 'Share of environment wording. CSR dictionary.Energy',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
+energy_csr_env
+
 energy_csr_soc <- plot_ly(data = energy_CSR, x = ~year, y = ~relative_soc, color = ~cik) %>% 
         add_markers() %>%
         layout(title = 'Share of social wording. CSR dictionary. Energy',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
+energy_csr_soc
+
 energy_csr_empl <- plot_ly(data = energy_CSR, x = ~year, y = ~relative_empl, color = ~cik) %>% 
         add_markers() %>%
         layout(title = 'Share of employee-related wording. CSR dictionary. Energy',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
+energy_csr_empl
+
 energy_csr_humans <- plot_ly(data = energy_CSR, x = ~year, y = ~relative_humans, color = ~cik) %>% 
        add_markers() %>%
         layout(title = 'Share of human-related wording. CSR dictionary. Energy',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
+energy_csr_humans
+
 energy_csr_total <- plot_ly(data = energy_CSR, x = ~year, y = ~relative_overall, color = ~cik) %>% 
       add_markers() %>%      
       layout(title = 'Share of ESG wording. CSR dictionary. Energy',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
+energy_csr_total
 ```
 
 ```{r Wordcloud CSR dictionary for energy, echo = FALSE}
@@ -572,21 +608,28 @@ energy_bbk_env <- plot_ly(data = energy_BBK, x = ~year, y = ~relative_env, color
         layout(title = 'Share of environment wording. BBK dictionary. Energy',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
+energy_bbk_env
+
 energy_bbk_soc <- plot_ly(data = energy_BBK, x = ~year, y = ~relative_soc, color = ~cik) %>% 
   add_markers() %>%
         layout(title = 'Share of social wording. BBK dictionary',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
+energy_bbk_soc
+
 energy_bbk_govern <- plot_ly(data = energy_BBK, x = ~year, y = ~relative_govern, color = ~cik) %>% 
   add_markers() %>%
         layout(title = 'Share of corporate governance wording. BBK dictionary',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
+energy_bbk_govern
+
 energy_bbk_total <- plot_ly(data = energy_BBK, x = ~year, y = ~relative_overall, color = ~cik) %>% 
   add_markers() %>%
         layout(title = 'Share of ESG wording. CSR dictionary',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
+energy_bbk_total
 ```
 
 #### Beverages sector companies #######
@@ -644,7 +687,6 @@ words_to_be_removed <- c(stopwords("english"), "million", "fiscal", "january", "
 # //KEEP IN MIND// to update the list in the appendix of removed words
 bev_tokens <- bev_tokens %>%
   tokens_remove(words_to_be_removed)
-
 # apply Flesch readability measure (takes a few minutes)
 bev_rd_flesch <- bev_corp %>%
   textstat_readability(measure = "Flesch", remove_hyphens = TRUE)
@@ -695,26 +737,35 @@ bev_csr_env <- plot_ly(data = bev_CSR, x = ~year, y = ~relative_env, color = ~ci
         layout(title = 'Share of environment wording. CSR dictionary. Beverages',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
+bev_csr_env
+
 bev_csr_soc <- plot_ly(data = bev_CSR, x = ~year, y = ~relative_soc, color = ~cik) %>% 
         add_markers() %>%
         layout(title = 'Share of social wording. CSR dictionary. Beverages',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
+bev_csr_soc
+
 bev_csr_empl <- plot_ly(data = bev_CSR, x = ~year, y = ~relative_empl, color = ~cik) %>% 
         add_markers() %>%
         layout(title = 'Share of employee-related wording. CSR dictionary. Beverages',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
+bev_csr_empl
+
 bev_csr_humans <- plot_ly(data = bev_CSR, x = ~year, y = ~relative_humans, color = ~cik) %>% 
        add_markers() %>%
         layout(title = 'Share of human-related wording. CSR dictionary. Beverages',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
+bev_csr_humans
+
 bev_csr_total <- plot_ly(data = bev_CSR, x = ~year, y = ~relative_overall, color = ~cik) %>% 
       add_markers() %>%      
       layout(title = 'Share of ESG wording. CSR dictionary. Beverages',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
+bev_csr_total
 ```
 
 ```{r Wordcloud CSR dictionary for beverages, echo = FALSE}
@@ -763,21 +814,28 @@ bev_bbk_env <- plot_ly(data = bev_BBK, x = ~year, y = ~relative_env, color = ~ci
         layout(title = 'Share of environment wording. BBK dictionary. Beverages',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
+bev_bbk_env
+
 bev_bbk_soc <- plot_ly(data = bev_BBK, x = ~year, y = ~relative_soc, color = ~cik) %>% 
   add_markers() %>%
         layout(title = 'Share of social wording. BBK dictionary',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
+bev_bbk_soc
+
 bev_bbk_govern <- plot_ly(data = bev_BBK, x = ~year, y = ~relative_govern, color = ~cik) %>% 
   add_markers() %>%
         layout(title = 'Share of corporate governance wording. BBK dictionary',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
+bev_bbk_govern
+
 bev_bbk_total <- plot_ly(data = bev_BBK, x = ~year, y = ~relative_overall, color = ~cik) %>% 
   add_markers() %>%
         layout(title = 'Share of ESG wording. CSR dictionary',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'percentage', hoverformat = '.2f'))
+bev_bbk_total
 ```
 
 
@@ -810,6 +868,8 @@ industry_total_comparison <- plot_ly() %>%
         layout(title = 'ESG wording evolution. Industry comparison',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'mean % of ESG wording', tickformat = '.3%', hoverformat = ',.2%'))
+industry_total_comparison
+
 industry_envir_comparison <- plot_ly() %>%
     add_markers(data=energy_time_evol, name="Energy", x = ~year, y = ~mean_env) %>%
     add_markers(data=fashion_time_evol, name="Fashion", x = ~year, y = ~mean_env) %>% 
@@ -817,6 +877,8 @@ industry_envir_comparison <- plot_ly() %>%
         layout(title = 'Environment wording evolution. Industry comparison',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'mean % of ESG wording', tickformat = '.3%', hoverformat = ',.2%'))
+industry_envir_comparison
+
 industry_soc_comparison <- plot_ly() %>%
     add_markers(data=energy_time_evol, name="Energy", x = ~year, y = ~mean_soc) %>%
     add_markers(data=fashion_time_evol, name="Fashion", x = ~year, y = ~mean_soc) %>% 
@@ -824,6 +886,7 @@ industry_soc_comparison <- plot_ly() %>%
         layout(title = 'Social wording evolution. Industry comparison',
               xaxis = list(title = 'year'),
               yaxis = list(title = 'mean % of ESG wording', tickformat = '.3%', hoverformat = ',.2%'))
+industry_soc_comparison
 ```
 
 
