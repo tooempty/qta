@@ -355,7 +355,58 @@ fashion_bbk_total
 #### Comparison with ESG-Ratings ####
 Since our goal is to analyse whether 10-k reports carry valuable information regarding the company's ESG values, we further compare the ESG ratings received by the companies to the relative ESG sentiment from the 10-k report. 
 
-We conduct the analysis on token level, and not aggregated, to see whether some ESG-related words words appear particularly frequently. 
+We conduct the analysis on token level, and not aggregated, to see whether some ESG-related words words appear particularly frequently.
+
+``` {r Read file with ESG scores, include = FALSE}
+## This section needs to be re-done. 
+ESG_scores_fashion <- read_excel(here("ESG_scores_fashion.xlsx"), sheet = "ESG", col_names = TRUE)
+names(ESG_scores_fashion)[4] <- "cik" #rename the cik column for convenience
+ESG_scores_fashion$cik <- as.character(ESG_scores_fashion$cik)
+
+ESG_scores_fashion_rf <- ESG_scores_fashion[,c(4,15:32)]
+
+for (i in 2:19) { # rename the columns as years
+names(ESG_scores_fashion_rf)[i] <- paste0(2023-i)}
+
+ESG_scores_fashion_rf_panel <- NULL 
+
+for (i in 1:nrow(ESG_scores_fashion_rf)) {
+  df <- ESG_scores_fashion_rf[i,]
+  df <- t(df)
+  df <- as.data.frame(df)
+  df <- df %>% mutate(cik = df[1,1])
+  df <- df[-1,]
+  df$year <- rownames(df)
+  ESG_scores_fashion_rf_panel <- rbind(ESG_scores_fashion_rf_panel, df)
+}
+
+plot_ly(data = ESG_scores_fashion_rf_panel, x = ~year, y = ~V1, color = ~cik) %>% 
+      add_markers() %>%      
+      layout(title = 'ESG rating evolution. Fashion',
+              xaxis = list(title = 'year'),
+              yaxis = list(title = 'rating', tickformat = '.0',hoverformat = '.2f'))
+
+ESG_scores_fashion_rf_panel <- merge(ESG_scores_fashion_rf_panel, fashion_BBK, by = c("cik", "year"))
+
+ESG_scores_fashion_rf_panel <- as.data.frame(ESG_scores_fashion_rf_panel)
+names(ESG_scores_fashion_rf_panel)[3] <- "rating"
+ESG_scores_fashion_rf_panel$rating <- as.numeric(ESG_scores_fashion_rf_panel$rating)
+ESG_scores_fashion_rf_panel <- na.omit(ESG_scores_fashion_rf_panel)
+
+
+ESG_scores_fashion_rf_panel_plot <- ESG_scores_fashion_rf_panel %>% group_by(cik) %>%
+                                          summarise(mean_rating = mean(rating),
+                                          mean_total = mean(relative_overall))
+
+plot_ly(ESG_scores_fashion_rf_panel_plot) %>% 
+      add_markers(x = ~cik,  y = ~mean_rating) %>%  
+      add_markers(x = ~cik, y = ~mean_total) %>%    
+      layout(title = 'ESG rating vs wroding. Fashion',
+              xaxis = list(title = 'company'),
+              yaxis = list(title = 'rating', tickformat = '.0', hoverformat = '.1f', showline = FALSE, 
+                           side = "left", color = "blue", fixedrange=TRUE))
+```
+
 
 ```{r Wordcloud CSR dictionary for fashion, echo = FALSE}
 ### Select CSR dictionary tokens ###
@@ -857,8 +908,9 @@ Berg, Florian and Fabisik, Kornelia and Sautner, Zacharias, Rewriting History II
 
 #### Further actions ####
 We further plan to expand the analysis by:
-1) Adding 1-2 more sectors, since between-industry comparison depicts that there are indeed differences in attention to ESG between different business sectors.
-2)
+1) Adding more observations from other sectors. Since between-industry comparison shows differences in attention to ESG between different business sectors, it will be interesting to identify those sectors that are concerned about ESG the most. 
+2) Analyzing not only industry, but also firm size effect, on company's ESG rating. It seems reasonable that larger companies will face more pressure from the regulators and clients and will have enough cash flows to make more ESG-friendly decisions. 
+3) We will additionally expand the analysis of the relationship between esg ratings and words and assess environmental, governance and social wording separately.
 
 #### Appendix ####
 
