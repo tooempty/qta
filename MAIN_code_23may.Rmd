@@ -39,7 +39,7 @@ fashion_cik <- fashion$CIK
 
 fashion_10k <- NULL
 energy_10k <- NULL
-industry3_10k <- NULL
+bev_10k <- NULL
 
 # loop that collects all reports for all companies for each industry
 # this will take some minutes!!!
@@ -50,6 +50,8 @@ for (i in fashion_cik) {
   fashion_10k <- rbind(fashion_10k, output)
 }
 
+rm(output)
+
 # energy
 #for (i in energy_cik$CIK) {
  # output <- readtext(here("Edgar filings_HTML view", "Form 10-K", i))
@@ -58,7 +60,7 @@ for (i in fashion_cik) {
 
 rm(output)
 
-# industry3
+# beverages
 #for (i in industry_cik$CIK) {
  # output <- readtext(here("Edgar filings_HTML view", "Form 10-K", i))
   #fashion_10k <- rbind(all, output)
@@ -68,7 +70,7 @@ rm(output)
 fashion_10k$text <- str_remove_all(fashion_10k$text, "\n•")
 fashion_10k$text <- str_remove_all(fashion_10k$text, "\n")
 #energy_10k
-#industry3
+#bev_10k
 
 # define columns into cik, report type and report year
 fashion_10k <- separate(
@@ -79,7 +81,7 @@ fashion_10k <- separate(
   remove = TRUE)
 
 #energy
-#industry3
+#beverages
 
 # only keep year
 #keep the year and not the full date
@@ -91,7 +93,7 @@ fashion_10k <- separate(
   remove = TRUE)
 
 #energy
-#industry3
+#beverages
 ```
 
 
