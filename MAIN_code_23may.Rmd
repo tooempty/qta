@@ -71,7 +71,7 @@ We took the 10K filings back to the year 2004. This leads to 18 reports if the o
 #### Research question ####
 
 #### Readability and the nature of 10K fillings ####
-```{r Creating a corpus and apply the readability measures, include=FALSE}
+```{r Creating a corpus and apply the readability measures for fashion, include=FALSE}
 # creating a corpus
 fashion_corp <- corpus(fashion_10k)
 # apply Flesch readability measure (takes a few minutes)
@@ -84,13 +84,13 @@ fashion_rd_fog <- fashion_corp %>%
 ```
 //Flesch//
 
-There are many different methods to try to measure the complexity of a underlying text source. Most measures take somehow into account the text structure, the length of sentences, the difficulty of used words and the usage of infrequent words. One of the first readability measures was developed by Rudolph Flesch back in 1948. As one of the oldest but still frequently used measure for readability it tries to reflect the complexity of a text by the average sentence length and the average number of syllables per word. The Flesch Reading Ease readability measure works with an index ranging from 0 to 100, with a higher index representing a simpler text to read. Theoretically a maximum score of 121.22 can be attended if every sentence just have a one-syllable word. There is also no lower limit. Therefore, some very complicated sentences can cause negative scores. With an average index of `r round(mean(fashion_rd_flesch$Flesch), digits = 2)` the 10Ks seem to be very complex based on the Flesch measure. A score below the score of 30 indicates a high difficulty to read the text and is best understood by university graduates. On the plot below the Flesch score for each company in our fashion sample across all years is shown. The readability scores tend to be more different between companies during the earlier years in our sample. From 2012 the companies have more similar reflected complexity as the scores vary much less as for the earlier ears. This can be due to more standardized restrictions by the SEC, but for the last two years 2020 and 2021 the scores do vary more again. Additionally, the complexity is increasing towards the present what is represented by a lower score. For the two last years multiple Flesch scores are below zero, suggesting these are very complicated texts to deal with. The higher variation and measured complexity could be caused by  COVID at how the firms are differently affected by the virus. Looking at the companies individually, it is noticeable that Lakeland Industries Inc. (cik = 798081, with an average Flesch score (AVS) of 5.81), Hansebrand Inc. (cik = 1359841, AVS = 7.65), PVH Corp. (cik = 78239, AVS = 9.06) and Carter Inc. (cik = 1060822, AVS = 9.37) tend to have more complex 10Ks. Whereas, the 10Ks from the companies G III Apparel Group LTD (cik = 821002, AVS = 19.92), Vera Bradley (cik = 1495320, AVS = 15.32) and Movado (cik = 72573, AVS = 14.34) are supposedly more easier to understand.
+There are many different methods to try to measure the complexity of a underlying text source. Most measures take somehow into account the text structure, the length of sentences, the difficulty of used words and the usage of infrequent words. One of the first readability measures was developed by Rudolph Flesch back in 1948. As one of the oldest but still frequently used measure for readability it tries to reflect the complexity of a text by the average sentence length and the average number of syllables per word. The Flesch Reading Ease readability measure works with an index ranging from 0 to 100, with a higher index representing a simpler text to read. Theoretically a maximum score of 121.22 can be attended if every sentence just have a one-syllable word. There is also no lower limit. Therefore, some very complicated sentences can cause negative scores. With an average index of `r round(mean(fashion_rd_flesch$Flesch), digits = 2)` the 10Ks seem to be very complex based on the Flesch measure. A score below the score of 30 indicates a high difficulty to read the text and is best understood by university graduates. On the plot below the Flesch score for each company in our fashion sample across all years is shown. The readability scores tend to be more different between companies during the earlier years in our sample. From 2012 the companies have more similar reflected complexity as the scores vary much less as for the earlier ears. This can be due to more standardized restrictions by the SEC, but for the last two years 2020 and 2021 the scores do vary more again. Additionally, the complexity is increasing towards the present what is represented by a lower score. For the two last years multiple Flesch scores are below zero, suggesting these are very complicated texts to deal with. The higher variation and measured complexity could be caused by COVID at how the firms are differently affected by the virus. Looking at the companies individually, it is noticeable that Lakeland Industries Inc. (cik = 798081, with an average Flesch score (AVS) of 5.81), Hansebrand Inc. (cik = 1359841, AVS = 7.65), PVH Corp. (cik = 78239, AVS = 9.06) and Carter Inc. (cik = 1060822, AVS = 9.37) tend to have more complex 10Ks. Whereas, the 10Ks from the companies G III Apparel Group LTD (cik = 821002, AVS = 19.92), Vera Bradley (cik = 1495320, AVS = 15.32) and Movado (cik = 72573, AVS = 14.34) are supposedly more easier to understand.
 
 references:
 - https://readabilityformulas.com/flesch-reading-ease-readability-formula.php
 
 
-```{r Readability plots Flesch, echo = FALSE, fig.width = 10 , fig.fullwidth=TRUE}
+```{r Readability plots Flesch for fashion, echo = FALSE, fig.width = 10 , fig.fullwidth=TRUE}
 # all companies, all years
 ggplotly(ggplot(fashion_rd_flesch, aes(x=fashion_10k$year, y =Flesch, colour=fashion_10k$cik)) + geom_point() + ggtitle("Flesch - Readability for fashion companies"), tooltip = c("colour", "y", "x"))
 ```
@@ -103,7 +103,7 @@ References:
 - Measuring Readability in Financial Disclosures; TIM LOUGHRAN and BILL MCDONALD; 2014
 - Biddle, Gary, Gilles Hilary, and Rodrigo Verdi, 2009, How does financial reporting quality relate to investment efficiency? Journal of Accounting and Economics 48, 112–131.
 
-```{r Readability plots FOG, echo = FALSE, fig.width = 10 , fig.fullwidth=TRUE}
+```{r Readability plots FOG for fashion, echo = FALSE, fig.width = 10 , fig.fullwidth=TRUE}
 # all companies, all years
 ggplotly(ggplot(fashion_rd_fog, aes(x=fashion_10k$year, y =FOG, color=fashion_10k$cik)) + geom_point() + ggtitle("FOG - Readability for fashion companies"), tooltip = c("colour", "y", "x"))
 ```
@@ -439,6 +439,27 @@ words_to_be_removed <- c(stopwords("english"), "million", "fiscal", "january", "
 # //KEEP IN MIND// to update the list in the appendix of removed words
 energy_tokens <- energy_tokens %>%
   tokens_remove(words_to_be_removed)
+
+# apply Flesch readability measure (takes a few minutes)
+energy_rd_flesch <- energy_corp %>%
+  textstat_readability(measure = "Flesch", remove_hyphens = TRUE)
+# apply FOG readability measure (takes a few minutes)
+energy_rd_fog <- energy_corp %>%
+  textstat_readability(measure = "FOG", remove_hyphens = TRUE)
+```
+
+The average Flesch readability score for the energy companies is at around `r round(mean(energy_rd_flesch$Flesch), digits = 2)`, indicating very complex and difficult to read text sources.
+
+```{r Plot readability Flesch for energy, echo=FALSE}
+# all companies, all years
+ggplotly(ggplot(energy_rd_flesch, aes(x=energy_10k$year, y =Flesch, colour=energy_10k$cik)) + geom_point() + ggtitle("Flesch - Readability for energy companies"), tooltip = c("colour", "y", "x"))
+```
+
+The average FOG score for our sample of 27 fashion companies from the US is `r round(mean(energy_rd_fog$FOG), digits = 2)`.
+
+```{r Readability plots FOG for energy, echo = FALSE, fig.width = 10 , fig.fullwidth=TRUE}
+# all companies, all years
+ggplotly(ggplot(energy_rd_fog, aes(x=energy_10k$year, y =FOG, color=energy_10k$cik)) + geom_point() + ggtitle("FOG - Readability for fashion companies"), tooltip = c("colour", "y", "x"))
 ```
 
 ```{r Apply CSR dict for energy, include = FALSE}
@@ -609,6 +630,27 @@ words_to_be_removed <- c(stopwords("english"), "million", "fiscal", "january", "
 # //KEEP IN MIND// to update the list in the appendix of removed words
 bev_tokens <- bev_tokens %>%
   tokens_remove(words_to_be_removed)
+
+# apply Flesch readability measure (takes a few minutes)
+bev_rd_flesch <- bev_corp %>%
+  textstat_readability(measure = "Flesch", remove_hyphens = TRUE)
+# apply FOG readability measure (takes a few minutes)
+bev_rd_fog <- bev_corp %>%
+  textstat_readability(measure = "FOG", remove_hyphens = TRUE)
+```
+
+The average Flesch readability score for the beverages companies is at around `r round(mean(bev_rd_flesch$Flesch), digits = 2)`, indicating a very complex and difficult to read text source. //TO DO// Check outliers with very negative Flesch score!
+
+```{r Plot readability Flesch for beverages, echo=FALSE}
+# all companies, all years
+ggplotly(ggplot(bev_rd_flesch, aes(x=bev_10k$year, y =Flesch, colour=bev_10k$cik)) + geom_point() + ggtitle("Flesch - Readability for beverage companies"), tooltip = c("colour", "y", "x"))
+```
+
+The average FOG score for our sample of 27 fashion companies from the US is `r round(mean(bev_rd_fog$FOG), digits = 2)`.
+
+```{r Readability plots FOG for beverages, echo = FALSE, fig.width = 10 , fig.fullwidth=TRUE}
+# all companies, all years
+ggplotly(ggplot(bev_rd_fog, aes(x=bev_10k$year, y =FOG, color=bev_10k$cik)) + geom_point() + ggtitle("FOG - Readability for beverage companies"), tooltip = c("colour", "y", "x"))
 ```
 
 ```{r Apply CSR dict for bev, include = FALSE}
