@@ -5,7 +5,7 @@ date: "5/19/2021"
 output: html_document
 # GROUP MEMBERS:
 # LAST NAME,        FIRST NAME,     STUDENT-ID,     GITHUB-ID
-# Perminova,        Marina,         XX-XXX-XXX,     , 
+# Perminova,        Marina,         XX-XXX-XXX,     MarinaPerminova, 
 # Bader,            Martin,         XX-XXX-XXX,     tooempty, 
 # Moine,            Alexandre,      15-052-319,     GoldenPineappleR
 ---
