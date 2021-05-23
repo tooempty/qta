@@ -361,7 +361,7 @@ Since our goal is to analyse whether 10-k reports carry valuable information reg
 ```{r Read file with ESG scores, include = FALSE}
 ## read the ESG scores file
 ESG_scores_fashion <- read_excel(here("ESG_scores_fashion.xlsx"), sheet = "ESG", col_names = TRUE)
-names(ESG_scores_fashion)[3] <- "cik" #rename the cik column for convenience
+names(ESG_scores_fashion)[4] <- "cik" #rename the cik column for convenience
 ESG_scores_fashion$cik <- as.character(ESG_scores_fashion$cik)
 fashion_BBK_by_group <- fashion_BBK %>% filter(year > 2017) %>% #filter out reasonable observations
                                 group_by(cik) %>% # creates a table of mean ESG scores through time 
