@@ -49,21 +49,19 @@ for (i in fashion_cik) {
   output <- readtext(here("Form10-K", i))
   fashion_10k <- rbind(fashion_10k, output)
 }
-
 rm(output)
 
 # energy
 #for (i in energy_cik$CIK) {
- # output <- readtext(here("Edgar filings_HTML view", "Form 10-K", i))
- # fashion_10k <- rbind(all, output)
+ # output <- readtext(here("energy_10ks", i))
+ # energy_10k <- rbind(energy_10k, output)
 #}
-
 rm(output)
 
 # beverages
 #for (i in industry_cik$CIK) {
- # output <- readtext(here("Edgar filings_HTML view", "Form 10-K", i))
-  #fashion_10k <- rbind(all, output)
+ # output <- readtext(here("bev_10ks", i))
+  #bev_10k <- rbind(bev_10k, output)
 #}
 
 # simple cleaning
