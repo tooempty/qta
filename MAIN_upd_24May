@@ -3,8 +3,8 @@ title: "ESG Content Analysis on US companies"
 author: "QTA group 2"
 date: "5/19/2021"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 ## Table of Content (temporary)
 Introduction // Sample selection and data collection // Research question // Readability and the nature of 10K fillings // Correspondence // Collocation Analysis // Applied dictionaries // Relative ESG-wording // Comparison with ESG-Ratings // Trends between industries // Limitations // Appendix
@@ -177,12 +177,12 @@ fashion_04_ca2 %>%
   ggplot(aes(x=dim1, y=dim2)) +
   geom_text(aes(label = doc)) +
   theme_classic() +
-  labs(x="Dimension 1", y="Dimension 2")
+  labs(x="Dimension 1", y="Dimension 2") + ggtitle("2D Correspondance analysis 2004")
 fashion_20_ca2 %>%
   ggplot(aes(x=dim1, y=dim2)) +
   geom_text(aes(label = doc)) +
   theme_classic() +
-  labs(x="Dimension 1", y="Dimension 2")
+  labs(x="Dimension 1", y="Dimension 2") + ggtitle("2D Correspondance analysis 2020")
 ```
 
 #### Collocation Analysis ####
