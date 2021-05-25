@@ -127,7 +127,7 @@ ggplotly(ggplot(fashion_rd_fog, aes(x=fashion_10k$year, y =FOG, color=fashion_10
 
 In summary, we conclude that both readability measures do calculate a very high complexity for all 10Ks with some differences on company-level. The trend of more difficult 10Ks towards recent years can be observed in both application of the two measures. However, it is highly questionable if these traditional readability measures can be applied to evaluate the readability of financial reports. Loughran and McDonald (2014) define the readability of financial reports as "the effective communication of valuation-relevant information". They conclude that just consider the file size of 10Ks represents a better estimator for the readability of the reports instead of commonly used readability measures. Based on this knowledge and on the fact that our readability results do not prove any strong outlier across both measurements we do not exclude any further fashion company from our sample.
 
-//TO DO// -> Measure the amount of tokens per company across years (only way to do it so far is by summarise the summary of the corpus and then plotting the result, but with summary we only get 100 observations, respecitvely 7 companies)
+//TO DO// -> Measure the amount of tokens per company across years (only way to do it so far is by summarise the summary of the corpus and then plotting the result, but with summary we only get 100 observations, respecitvely 7 companies for fashion sample)
 
 References:
 - Measuring Readability in Financial Disclosures; TIM LOUGHRAN and BILL MCDONALD; 2014
