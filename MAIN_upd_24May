@@ -510,7 +510,7 @@ The plot shows that the calculated complexity by Flesch increases and becomes in
 ggplotly(ggplot(energy_rd_flesch, aes(x=energy_10k$year, y =Flesch, colour=energy_10k$cik)) + geom_point() + ggtitle("Flesch - Readability for energy companies"), tooltip = c("colour", "y", "x"))
 ```
 
-The average FOG score for our sample of 30 energy companies from the US is `r round(mean(energy_rd_fog$FOG), digits = 2)`.
+Also regarding the average FOG score for our sample of 30 energy companies from the US which is at around `r round(mean(energy_rd_fog$FOG), digits = 2)` it scores very similar as the average for the fashion companies. The same picture about the trend is seen. Also the ouliers within the enegry companies do persist the FOG measure. By further examination of the outlier 10-Ks we do not find any untypical nature of text.
 
 ```{r Readability plots FOG for energy, echo = FALSE, fig.width = 10 , fig.fullwidth=TRUE}
 # all companies, all years
