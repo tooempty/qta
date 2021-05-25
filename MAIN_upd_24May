@@ -503,8 +503,7 @@ energy_rd_flesch <- energy_corp %>%
 energy_rd_fog <- energy_corp %>%
   textstat_readability(measure = "FOG", remove_hyphens = TRUE)
 ```
-
-The average Flesch readability score for the energy companies is at around `r round(mean(energy_rd_flesch$Flesch), digits = 2)`, indicating very complex and difficult to read text sources.
+The plot shows that the calculated complexity by Flesch increases and becomes increasingly similar. The same was preceived for the sample of fashion companies before. There is no significant difference in the readability comparing the fashion and the enegry sample. The average Flesch readability score at around `r round(mean(energy_rd_flesch$Flesch), digits = 2)` for the energy companies is nearly the same as for the fashion sample. Both scores indicating very complex and difficult to read text sources. However, for the energy sample it tends to have few more outliers.
 
 ```{r Plot readability Flesch for energy, echo=FALSE}
 # all companies, all years
