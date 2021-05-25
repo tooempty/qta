@@ -99,7 +99,7 @@ fashion_rd_flesch <- fashion_corp %>%
 fashion_rd_fog <- fashion_corp %>%
   textstat_readability(measure = "FOG", remove_hyphens = TRUE)
 ```
-To compare our analysis based on differences in ESG wording in the reports across industries, we first search the samples of the respective industries for outliers. We were already able to identify one outlier through the greatly reduced number of two 10Ks for the fashion industry as stated before. A readability analysis and a two-dimensional correspondence analysis will help to identify further potential outliers.
+To compare our analysis based on differences in ESG wording in the reports across industries, we first search the samples of the respective industries for outliers. We were already able to identify one outlier through the greatly reduced number of two 10Ks for the fashion industry as stated before. A readability analysis and a two-dimensional correspondence analysis will help to identify further potential outliers. Additionally, it also provides an additional check of the downloaded documents. Through the readability analysis of all individual 10-K filings across all years, we were able to filter out individual documents that did not represented a 10-K but rather an error message by the SEC.
 
 //Flesch//
 
