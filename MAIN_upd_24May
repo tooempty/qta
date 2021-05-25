@@ -79,7 +79,6 @@ At the beginning of our work, we wanted to take a closer look at two industries 
 
 We took the 10K filings back to the year 2004. This leads to 18 reports if the one from 2021 was already made public. For the fashion industry we have a average of `r round(ndoc(fashion_10k)/length(unique(fashion_10k$cik)), digits = 2)` total 10K filings per company. This is due to some later SEC registrations after 2004 for some companies.
 
-
 #### Research question ####
 
 We will looking at the following two main questions. 
