@@ -1,0 +1,1679 @@
+---
+title: "ESG Content Analysis on US companies"
+author: "QTA group 2"
+date: "5/19/2021"
+output:
+  html_document: default
+  pdf_document: default
+---
+## Table of Content (temporary)
+Introduction // Sample selection and data collection // Research question // Readability and the nature of 10K fillings // Correspondence // Collocation Analysis // Applied dictionaries // Relative ESG-wording // Comparison with ESG-Ratings // Trends between industries // Limitations // Appendix
+
+```{r Loading packages and load/prepare 10Ks for fashion, include=FALSE}
+# load packages
+library(readtext)
+library(dplyr)
+library(here)
+library(readxl)
+library(quanteda)
+library(quanteda.textmodels)
+library(stringr)
+library(tidyverse)
+library(ggplot2)
+library(plotly)
+library(quanteda.textstats)
+library(quanteda.textplots)
+
+# load excel files with cik numbers for each industry with the companies
+fashion <- read_excel(here("fashion_cik.xlsx"), sheet = "Sheet1", col_names = TRUE)
+fashion <- fashion[, c(1, 4:14)]
+
+# keeping only the cik number
+fashion_cik <- fashion$CIK
+
+# load the 10Ks from downloaded files
+fashion_10k <- NULL
+
+# loop that collects all reports for all companies for each industry
+# this will take some minutes!!!
+# fashion (should be 436 observations)
+for (i in fashion_cik) {
+  output <- readtext(here("fashion_10k", i))
+  fashion_10k <- rbind(fashion_10k, output)
+}
+rm(output)
+
+# simple cleaning
+fashion_10k$text <- str_remove_all(fashion_10k$text, "\n•")
+fashion_10k$text <- str_remove_all(fashion_10k$text, "\n")
+
+# define columns into cik, report type and report year
+fashion_10k <- separate(
+  fashion_10k,
+  1,
+  into = c("cik", "type", "year", NA),
+  sep = "_",
+  remove = TRUE)
+
+# only keep year
+# keep the year and not the full date
+fashion_10k <- separate(
+  fashion_10k,
+  "year",
+  into = c("year", NA),
+  sep = "-",
+  remove = TRUE)
+```
+
+```{r Correction wrong file name, include = FALSE}
+wrong_year <- which(fashion_10k$year == "2016–0.html") # there is a mis-specification in splitting of 2016 
+fashion_10k[wrong_year, 3] = 2016 # re-write the value in the cell as 2016 correctly
+rm(wrong_year) #remove the unnecessary variable
+```
+
+#### Introduction ####
+
+In recent years, social responsibility has become a standard measure for every company. Companies are not only measured by their financial success, but also how they conduct their business. ESG ratings are commonly used to compare their performance across industries and sectors.
+But regardless of how well a company actually adheres to ESG standards, it will usually want present its actions in a favorable way.
+Baier, Berninger and Kiesel (2020) stated: "Financial reporting, or more precisely annual reports, are identified to be the most reliable disclosure to quantify a firm’s contribution to CSR." ^[Baier, Berninger and Kiesel (2020): Environmental, social and governance reporting in annual reports: A textual analysis] This is why we want to focus on the usage of ESG-wording in annual reports. An annual report usually differs from company to company in scope, detail and presentation. This makes it more difficult to compare one specific aspect of annual reporting, as we want with the ESG-wording. This is a major advantage of 10Ks reports, which is very often chosen as the data basis for various studies. Both the structure and the required information content are specified by the SEC for all companies enlisted in the US. With the greater standardization of financial presentation, there is the advantage of a more precise differentiation of the content.
+This article will look at how US companies in the fashion, energy and beverage industries describe their ESG activities in the annual 10-K report and compare it with an independent external ESG-Ratings. 
+
+#### Sample selection and data ####
+
+At the beginning of our work, we wanted to take a closer look at two industries where ESG is quite a popular topic. We chose the fashion industry and energy companies in oil and gas sectors. Later, we added the beverage industry to compare our results with an industry with little to no perceived ESG importance. To identify industry corresponding companies with their country of exchange being the US we used the Refinitiv Workspace access from the University of St. Gallen. Also to receive a first ESG rating measure we refer to the data from Refinitiv. More precisely we used the screener application from the workspace to filter for the companies we wanted to examine. To identify the correct industry we chose to filter for the Global Industry Classification Standard (GICS). This lead us first to 74 fashion industries. We then excluded the companies where we do not have any ESG rating for the actual year. Our resulting sample of US fashion industries consists of 27 firms. Out of 476 energy companies restricting to only the oil, gas and consumable fuels sector the ESG rating was provided by Refinitiv for 108 companies. To compare it with our fashion sample we further took a random sample of 30 energy companies. For the beverage companies a total of 25 companies resulted.
+
+Taking all three samples together we have a total of 82 companies. In order to get only specific 10K filings from the desired companies and to avoid downloading each report manually for each year and for each company, we used the R package "edgar". It provides with two useful functions when it comes to downloading 10K reports: getFilings and getFilingsHTML. The arguments needed are a specific number of the SEC, the so-called cik number, the type of document desired (10-K, 10-Q, 8-K, etc.) and the year(s). For the CIK number of the companies, a table from the website rankandfield.com was taken and merge with the ticker symbol. If no CIK was found in the existing table, the CIK number was manually searched and added. With the help of a loop, the 10-Ks could be downloaded in R Studio for all desired companies. However, for the getFilings function, an extremely large amount of tags and other unnecessary website/document information was supplied through the txt file instead of just plain text. After initial clean-up attempts, it became too much work and we tried the getFilingsHTML function. This returned the reports in html format and had a much cleaner appearance. A few minor cleanup steps delivered usable textdata. However, another problem arose that for some years (three to six years per examined company) the function simply did not seem to find 10-K reports, even a manual search would clearly find them. After searching for alternatives based on Python, which delivered comparable and mostly even worse results, we decided to download the missing reports manually from the SEC website, which took some time.
+
+We got the 10-K filings back to the year of 2004 to compare the ESG-wording and the ESG-ratings over time. It makes little sense to go beyond 2004 because we do not have much ESG-ratings for these years or significant amount of companies were not enlisted back then. However, if a company was already listed in 2004 we would get 18 reports in total if the one from 2021 was already made public. For the fashion industry we have a average of `r round(ndoc(fashion_10k)/length(unique(fashion_10k$cik)), digits = 2)` total 10K filings per company. As we mentioned this is due to some later SEC registrations after 2004 for some companies, like Kontoor Brands Inc. or Capri Holdings Ltd. In case of Kontoor Brands it has to be considered to maybe remove the company from the sample, as it is newly listed and only provides 10Ks for the years 2020 and 2021. //TO DO//
+
+
+#### Research question ####
+
+We will looking at the following two main questions.
+
+Is there a correlation between the wording of a 10-K report and the ESG-score of a company?
+How does the wording of the three ESG dimensions (Environment, Social, Governance) differ across industries? 
+
+#### Readability and the nature of 10K fillings ####
+```{r Creating a corpus and apply the readability measures for fashion, include=FALSE}
+# creating a corpus
+fashion_corp <- corpus(fashion_10k)
+# apply Flesch readability measure (takes a few minutes)
+fashion_rd_flesch <- fashion_corp %>%
+  textstat_readability(measure = "Flesch", remove_hyphens = TRUE)
+# apply FOG readability measure (takes a few minutes)
+fashion_rd_fog <- fashion_corp %>%
+  textstat_readability(measure = "FOG", remove_hyphens = TRUE)
+```
+
+To compare our analysis based on differences in ESG wording in the reports across industries, we first search the samples of the respective industries for outliers. We were already able to identify one outlier through the greatly reduced number of two 10Ks for the fashion industry as stated before. A readability analysis and a two-dimensional correspondence analysis will help to identify further potential outliers. Additionally, it also provides an additional check of the downloaded documents. Through the readability analysis of all individual 10-K filings across all years, we were able to filter out individual documents that did not represented a 10-K but rather an error message by the SEC.
+
+//Flesch//
+
+There are many different methods to try to measure the complexity of a underlying text source. Most measures take somehow into account the text structure, the length of sentences, the difficulty of used words and the usage of infrequent words. One of the first readability measures was developed by Rudolph Flesch back in 1948. As one of the oldest but still frequently used measure for readability it tries to reflect the complexity of a text by the average sentence length and the average number of syllables per word. The Flesch Reading Ease readability measure works with an index ranging from 0 to 100, with a higher index representing a simpler text to read. Theoretically a maximum score of 121.22 can be attended if every sentence just have a one-syllable word. There is also no lower limit. Therefore, some very complicated sentences can cause negative scores. But already a score below 30 indicates a high difficulty to read the text and is best understood by university graduates. With an average index of `r round(mean(fashion_rd_flesch$Flesch), digits = 2)` the 10Ks of the fashion sample seem to be very complex based on the Flesch measure. On the plot below the Flesch score for each company in our fashion sample is shown across all years. The readability scores tend to be more different between the companies during the earlier years in our sample. From 2012 the companies have more similar reflected complexity as the scores vary much less as for the earlier ears. This can be due to more standardized restrictions by the SEC, but for the last two years 2020 and 2021 the scores do vary more again. Additionally, the complexity is increasing towards the present what is represented by a lower score. For the two last years multiple Flesch scores are below zero, suggesting these are very complicated texts to deal with. The higher variation and measured complexity could be caused by COVID at how the firms are differently affected by the virus. Looking at the fashion companies individually, it is noticeable that Lakeland Industries Inc. (cik = 798081, with an average Flesch score (AVS) of 5.81), Hansebrand Inc. (cik = 1359841, AVS = 7.65), PVH Corp. (cik = 78239, AVS = 9.06) and Carter Inc. (cik = 1060822, AVS = 9.37) tend to have more complex 10Ks. Whereas, the 10Ks from the companies G III Apparel Group LTD (cik = 821002, AVS = 19.92), Vera Bradley (cik = 1495320, AVS = 15.32) and Movado (cik = 72573, AVS = 14.34) are supposedly more easier to understand. We keep the names in mind while we will apply another readability measure.
+
+references:
+- https://readabilityformulas.com/flesch-reading-ease-readability-formula.php
+
+
+```{r Readability plots Flesch for fashion, echo = FALSE, fig.width = 10 , fig.fullwidth=TRUE}
+# all companies, all years
+plot_flesch <- ggplotly(ggplot(fashion_rd_flesch, aes(x=fashion_10k$year, y =Flesch, colour=fashion_10k$cik)) + geom_point() +  ggtitle("Flesch - Readability for fashion companies"), tooltip = c("colour", "y", "x") )
+
+x <- list(
+    title = "year")
+
+y <- list(
+    title = "Readability score")
+
+plot_flesch %>% layout(xaxis = x, yaxis = y)
+```
+
+//FOG//
+
+Apart form the Flesch score a also well-known readability measure is the FOG index. It is widely used, also in the area of Accounting and Finance. Biddle, Hilary, and Verdi (2009) even stated that it is “a measure of financial statement readability”. The FOG index evaluates the difficulty of understanding a text on similar parameters like the Flesch index. Gunning-Fog, the creator of the FOG index used also the average sentence length. Together with the proportion of complex words (here words with 3-syllables) it forms a linear combination to measure the complexity of a underlying text source. In contrast to the Flesch score a higher FOG index indicates a more difficult text. A index of less than 8 is found to be understood by an universal audience, whereas a score above 17 can only be understood by college graduates. The average FOG score for our sample of 27 fashion companies from the US is `r round(mean(fashion_rd_fog$FOG), digits = 2)`. Those 10Ks are therefore considered as very complex and difficult to read. The graph below displaying all readability scores for each fashion company over 18 years shows a similar picture than the one for the Flesch score. Keep in mind that the FOG scores behave the opposite way than the Flesch score, as a higher FOG score indicates a higher difficulty to read the text source. It can also be seen that the readability is lower towards the more recent years and the variance is slightly smaller during the years 2016 to 2019. However, it seems that for the FOG index the readability scores vary less, expect for single outliers. The company with the most complex 10Ks is PVH Corp. (cik = 78239, 26.11), which was the third complex one using the Flesch score. The most understandable 10Ks were provided again by G III Apparel Group LTD (cik = 821002, 21.82) but also Skechers USA Inc. (cik = 1065837, 22.91) and Fossil Group Inc. (cik= 883569, 22.92) were more understandable than the ohter 10Ks according to the FOG index. Surprisingly the company with the most complex 10Ks regarding the Flesch score, Lakeland Industries, achieves just a very average FOG score of 24.76.
+
+References:
+- Measuring Readability in Financial Disclosures; TIM LOUGHRAN and BILL MCDONALD; 2014
+- Biddle, Gary, Gilles Hilary, and Rodrigo Verdi, 2009, How does financial reporting quality relate to investment efficiency? Journal of Accounting and Economics 48, 112–131.
+
+```{r Readability plots FOG for fashion, echo = FALSE, fig.width = 10 , fig.fullwidth=TRUE}
+# all companies, all years
+plt_fog <- ggplotly(ggplot(fashion_rd_fog, aes(x=fashion_10k$year, y =FOG, color=fashion_10k$cik)) + coord_cartesian(ylim = c(15, 38)) + geom_point() + ggtitle("FOG - Readability for fashion companies"), tooltip = c("colour", "y", "x"))
+
+plt_fog %>% layout(xaxis = x, yaxis = y)
+
+rm(x, y)
+```
+
+In summary, we conclude that both readability measures do calculate a very high complexity for all 10Ks with some differences on company-level. The trend of more difficult 10Ks towards recent years can be observed in both application of the two measures. However, it is highly questionable if these traditional readability measures can be applied to evaluate the readability of financial reports. Loughran and McDonald (2014) define the readability of financial reports as "the effective communication of valuation-relevant information". They conclude that just consider the file size of 10Ks represents a better estimator for the readability of the reports instead of commonly used readability measures. Based on this knowledge and on the fact that our readability results do not prove any strong outlier across both measurements we do not exclude any further fashion company from our sample.
+
+//TO DO// -> Measure the amount of tokens per company across years (only way to do it so far is by summarise the summary of the corpus and then plotting the result, but with summary we only get 100 observations, respecitvely 7 companies for fashion sample)
+
+References:
+- Measuring Readability in Financial Disclosures; TIM LOUGHRAN and BILL MCDONALD; 2014
+
+
+####Correspondence ####
+
+```{r Correspondance analysis 2004 and 2020, include = FALSE}
+# analysis only on one year across companies to have only max 27 data points (otherwise way too much)
+# filter out the years 2004 and 2020 to show difference in correspondance
+fashion_2004 <- fashion_10k %>%
+  filter(year == 2004)
+fashion_2020 <- fashion_10k %>%
+  filter(year == 2020)
+## create corpus
+fashion_04_corp <- corpus(fashion_2004)
+fashion_20_corp <- corpus(fashion_2020)
+## Tokenization
+fashion_04_tokens <- fashion_04_corp %>%
+  tokens(remove_punct = TRUE, # remove punctuation
+         remove_numbers = TRUE, # remove numbers
+         remove_symbols = TRUE) %>% # remove symbols
+  tokens_tolower() # everything to lower cases
+fashion_04_tokens <- fashion_04_tokens %>%
+  tokens_remove(stopwords("english"))
+fashion_20_tokens <- fashion_20_corp %>%
+  tokens(remove_punct = TRUE, # remove punctuation
+         remove_numbers = TRUE, # remove numbers
+         remove_symbols = TRUE) %>% # remove symbols
+  tokens_tolower() # everything to lower cases
+fashion_20_tokens <- fashion_20_tokens %>%
+  tokens_remove(stopwords("english"))
+## DFM
+fashion_04_dfm <- dfm(fashion_04_tokens)
+fashion_20_dfm <- dfm(fashion_20_tokens)
+## 1D correspondence analysis
+fashion_04_ca <- textmodel_ca(fashion_04_dfm)
+fashion_20_ca <- textmodel_ca(fashion_20_dfm)
+## 2D correspondence analysis
+fashion_04_ca2 <- data.frame(dim1 = coef(fashion_04_ca, doc_dim = 1)$coef_document, 
+                       dim2 = coef(fashion_04_ca, doc_dim = 2)$coef_document,
+                       doc = fashion_04_ca$rownames)
+fashion_20_ca2 <- data.frame(dim1 = coef(fashion_20_ca, doc_dim = 1)$coef_document, 
+                       dim2 = coef(fashion_20_ca, doc_dim = 2)$coef_document,
+                       doc = fashion_20_ca$rownames)
+```
+
+Additionally, to the readability analysis we conduct a short two-dimensional correspondence analysis to identify potential outliers who could dilute our findings. The conducted correspondence analysis for the fashion sample supports the picture of higher differences in 10Ks in more recent years compared to current years as concluded by the readability measures. A graphical comparison of a two-dimensional correspondence analysis of the years 2004 and 2020 reveals a greater dispersion and thus greater differences in the 10K reports for the year 2004. This also provides an indication that a greater standardization of the filings could have taken place towards the present. However, some companies are always classified as different by the analysis over the years. Lakeland Industries Inc. (text7 in 2004 and text11 in 2020) shows a strong two-dimensional difference across almost all years. It is also the company which has the highest complexity according the Flesch score. A closer look at Lakeland Industries reveals that it is a company which has it's primary business in orthopedic, prosthetic and surgical appliances while it is also producing protective clothing for industrial usage. This represents not a typical activity compared to the other companies in our fashion sample.
+//TO DO// -> Do we want to take it out??
+Another company that stands out across multiple years is Unifi Inc. (text18 in 2004 and text24 in 2020). The 10Ks from Unifi seems to be (at least in one dimension) different from the others and different than the ones from Lakeland Industries. For Unifi, it turns out that the company is mainly a supplier of yarns, innovative synthetics and other fabrics used by the fashion industry. As it does still classify as a fashion company Unfiy will not get excluded from the sample.
+
+The first dimension ("Dimension 1") could separate the sample into industries whereas the second dimension ("Dimension 2") could stand for a more businesscase related measure (e.g. suppilier versus manufacturer).
+
+```{r Plot 2D correspondance analysis, echo = FALSE}
+fashion_04_ca2 %>%
+  ggplot(aes(x=dim1, y=dim2)) +
+  geom_text(aes(label = doc)) +
+  theme_classic() +
+  labs(x="Dimension 1", y="Dimension 2") + ggtitle("2D Correspondance analysis 2004")
+
+fashion_20_ca2 %>%
+  ggplot(aes(x=dim1, y=dim2)) +
+  geom_text(aes(label = doc)) +
+  theme_classic() +
+  labs(x="Dimension 1", y="Dimension 2") + ggtitle("2D Correspondance analysis 2020")
+```
+
+#### Collocation Analysis ####
+
+```{r Tokenization, include = FALSE}
+fashion_tokens <- fashion_corp %>%
+  tokens(remove_punct = TRUE, # remove punctuation
+         remove_numbers = TRUE, # remove numbers
+         remove_symbols = TRUE,
+         remove_url = TRUE) %>% # remove symbols
+  tokens_tolower() # everything to lower cases
+# takes some minutes!
+words_to_be_removed <- c(stopwords("english"), "million", "fiscal", "january", "february",
+           "march", "april", "may", "june", "july", "august", "september",
+           "october", "november", "december", "business", "net", "s")
+# //KEEP IN MIND// to update the list in the appendix of removed words
+fashion_tokens <- fashion_tokens %>%
+  tokens_remove(words_to_be_removed)
+```
+
+#### Applied dictionaries ####
+//CSR dict//
+
+Pencle and Mălăescu (2016) developed a content analytic dictionary to measure the corporate social responsibility (CSR) of text documents issued by a company. The dictionary was composed by computer-assisted analyses of US IPOs between the years 2011 and 2013. Four dimensions should capture the different dimensions of CSR: Human rights with 297 entries, employee (319), social and community (361) and environment (451). It is notable that different words can occur in multiple dimensions, as for example the term "abuse" is contained in all four dimensions. //TO DO// -> table with dimensions, number of entries and typical examples of words included in the dictionary (human rights: civil_rights, fairness, freedom, minority or privileges; employee: benefit, disability, educate, equal, recognition, team or union; social and community: commitments, communal, foodbank, humans, protected, urban or volunteer; environment: emission, groundwater, renew, sustainable or waste).
+
+If we remove all the stopwords and other terms that are insignificant for our analysis (see Appendix 1) we get a average of r mean(fashion_count_tokens) tokens for the fashion companies. Out of these a percentage of `r round(mean(ntoken(fashion_csr_all_dfm))/mean(count_tokens), digits = 4)*100%` tokens are regarded as CSR important terms according to the dictionary by Pencle and Mălăescu (2016). Looking at the different dimensions, the employee category provides the most amount of tokens and human rights contribute the least number of tokens. But all dimensions do provide a fair amount of tokens and the differences between them are small. In addition to the total amount of tokens, the frequency of which tokens appear how often plays a role. It is possible that a few terms occur extremely often and influence the results significantly. A wordcloud shows the most featured dictionary tokens for the fashion sector. It is noticeable that relatively common words such as "future", "management", "plan", "performance" and "employees" occur relatively often and can be significant drivers of the CSR wording.
+
+reference:
+- Pencle & Malescu (2016)
+
+```{r Loading CSR dict, include = FALSE}
+### Load CSR dict ###
+dictionary_csr <- dictionary(file = "CorporateSocialResponsibility.cat")
+# load the 1st dictionary CSR
+fashion_CSR <- dfm(fashion_tokens, dictionary = dictionary_csr) # set up a dfm with word count by category
+fashion_CSR <- convert(fashion_CSR, to = "data.frame") # convert it to df for easy merge
+fashion_CSR <- cbind(fashion_CSR, fashion_10k[,c(1,3)]) # merge with cik and year data
+count_tokens_fashion <- ntoken(fashion_tokens) #counts total tokens in the text
+count_tokens_fashion <- as.data.frame(count_tokens_fashion) # convert to df for easy merge
+fashion_CSR <- cbind(fashion_CSR, count_tokens_fashion) # merge with the token count
+# find the relative ESG-related words 
+fashion_CSR_total <- fashion_CSR %>% 
+        select(ENVIRONMENT, EMPLOYEE, 'HUMAN RIGHTS', 'SOCIAL AND COMMUNITY') %>% 
+        rowSums(na.rm=TRUE)
+  
+fashion_CSR <- cbind(fashion_CSR, fashion_CSR_total) 
+rm(fashion_CSR_total)
+  
+fashion_CSR <- fashion_CSR %>% mutate(relative_env = ENVIRONMENT/count_tokens_fashion,
+                                              relative_soc = `SOCIAL AND COMMUNITY`/count_tokens_fashion,
+                                              relative_empl = EMPLOYEE/count_tokens_fashion,
+                                              relative_humans = `HUMAN RIGHTS`/count_tokens_fashion,
+                                              relative_overall = fashion_CSR_total/count_tokens_fashion)
+
+round(mean(fashion_CSR$relative_env), digits = 4)*100
+round(mean(fashion_CSR$relative_soc), digits = 4)*100
+round(mean(fashion_CSR$relative_empl), digits = 4)*100
+```
+
+
+```{r Relative ESG wording CSR dict for fashion, echo = FALSE}
+plot_ly(fashion_CSR, x = ~year, y = ~relative_env, type='scatter', mode='markers',
+             text = ~paste("CIK :", cik,
+                           "<br> Score :", paste0(round(100*relative_env, digits = 3), "%"), 
+                           "<br> Year :", year),
+             textposition = "auto",
+             hoverinfo = "text") %>%
+  
+  add_trace(y = ~relative_humans, type='scatter', mode='markers',
+             text = ~paste("CIK :", cik,
+                           "<br> Score :", paste0(round(100*relative_humans, digits = 3), "%"), 
+                           "<br> Year :", year),
+             textposition = "auto",
+             hoverinfo = "text") %>%
+  
+  add_trace(y = ~relative_empl, type='scatter', mode='markers',
+             text = ~paste("CIK :", cik,
+                           "<br> Score :", paste0(round(100*relative_empl, digits = 3), "%"), 
+                           "<br> Year :", year),
+             textposition = "auto",
+             hoverinfo = "text") %>%
+  layout(
+    updatemenus = list(
+      list(
+        type = "buttons",
+        x = -0.1,
+        y = 0.8,
+        label = 'Category',
+        buttons = list(
+          list(method = "restyle",
+               args = list('visible', c(TRUE, TRUE, TRUE)),
+               label = "View all"))), 
+      list(type = "buttons",
+        x = -0.1,
+        y = 0.7,
+        label = 'Category',
+        buttons = list(
+          list(method = "restyle",
+               args = list('visible', c(TRUE, FALSE, FALSE)),
+               label = "Environment"),
+          list(method = "restyle",
+               args = list('visible', c(FALSE, TRUE, FALSE)),
+               label = "Society"),
+          list(method = "restyle",
+               args = list('visible', c(FALSE, FALSE, TRUE)),
+               label = "Employees"))))) %>%      
+      layout(title = 'ESG wording. Fashion industry. CSR dictionary',
+              xaxis = list(title = 'year'),
+              yaxis = list(title = 'percentage', hoverformat = '.2f'), showlegend = FALSE) 
+
+```
+
+
+//BBK dict //
+
+With the increasing importance of environmental, social and governance (ESG) factors for companies and investors, Baier, Berninger and Kiesel (2020) have recently developed a new ESG content dictionary. The dictionary was trained on the basis of financial reports and is intended as a tool to reflect the ESG activities of companies. Each of the 482 words occurring in the dictionary is considered as a ESG-term that is mainly used in the context of ESG. The index consists of three main topics: governance, environmental and social. Further there are 11 categories and 35 subcategories that allows a very precise search for different aspects in the field of ESG.
+
+reference:
+- Baier, Berninger & Kiesel (2020)
+
+```{r Loading BBK dict, include = FALSE}
+### Load BBK dict ###
+dictionary_bbk <- read_excel(here("BaierBerningerKiesel.xlsx"), sheet = "Sheet1", col_names = TRUE)
+# load the 2nd dictionary BBK Excel-file
+Governance_BBK <- dictionary_bbk[dictionary_bbk$Topic == 'Governance',]
+Governance_BBK <- Governance_BBK[1]
+Environmental_BBK <- dictionary_bbk[dictionary_bbk$Topic == 'Environmental',]
+Environmental_BBK <- Environmental_BBK[1]
+Social_BBK <- dictionary_bbk[dictionary_bbk$Topic == 'Social',]
+Social_BBK <- Social_BBK[1]
+dictionary_BBK <- dictionary(list(Governance = Governance_BBK, 
+                                  Environmental = Environmental_BBK, 
+                                  Social = Social_BBK))
+rm(Governance_BBK, Environmental_BBK, Social_BBK)
+fashion_BBK <- dfm(fashion_tokens, dictionary = dictionary_BBK, valuetype = "glob") # set up a dfm with word count by category
+fashion_BBK <- convert(fashion_BBK, to = "data.frame") # convert it to df for easy merge
+fashion_BBK <- cbind(fashion_BBK, fashion_10k[,c(1,3)]) # merge with cik and year data
+fashion_BBK <- cbind(fashion_BBK, count_tokens_fashion) # merge with the token count
+# fashion_BBK$year <- as.Date(fashion_BBK$year, format="%d/%m/%Y") 
+# find the relative ESG-related words 
+total_ESG_only_BBK <- fashion_BBK %>% 
+  select(Governance.Word, Environmental.Word, Social.Word) %>% 
+  rowSums(na.rm=TRUE)
+fashion_BBK <- cbind(fashion_BBK, total_ESG_only_BBK) 
+fashion_BBK <- fashion_BBK %>% mutate(relative_govern = Governance.Word/count_tokens_fashion,
+                                      relative_env = Environmental.Word/count_tokens_fashion,
+                                      relative_soc = Social.Word/count_tokens_fashion,
+                                      relative_overall = total_ESG_only_BBK/count_tokens_fashion)
+
+round(mean(fashion_BBK$relative_env), digits = 4)*100
+round(mean(fashion_BBK$relative_soc), digits = 4)*100
+round(mean(fashion_BBK$relative_govern), digits = 4)*100
+
+```
+
+```{r Relative ESG wording BBK dict for fashion, echo = FALSE}
+
+plot_ly(fashion_BBK, x = ~year, y = ~relative_env, type='scatter', mode='markers',
+             text = ~paste("CIK :", cik,
+                           "<br> Score :", paste0(round(100*relative_env, digits = 3), "%"), 
+                           "<br> Year :", year),
+             textposition = "auto",
+             hoverinfo = "text") %>%
+  
+  add_trace(y = ~relative_soc, type='scatter', mode='markers',
+             text = ~paste("CIK :", cik,
+                           "<br> Score :", paste0(round(100*relative_soc, digits = 3), "%"), 
+                           "<br> Year :", year),
+             textposition = "auto",
+             hoverinfo = "text") %>%
+  
+  add_trace(y = ~relative_govern, type='scatter', mode='markers',
+             text = ~paste("CIK :", cik,
+                           "<br> Score :", paste0(round(100*relative_govern, digits = 3), "%"), 
+                           "<br> Year :", year),
+             textposition = "auto",
+             hoverinfo = "text") %>%
+  layout(
+    updatemenus = list(
+      list(
+        type = "buttons",
+        x = -0.1,
+        y = 0.8,
+        label = 'Category',
+        buttons = list(
+          list(method = "restyle",
+               args = list('visible', c(TRUE, TRUE, TRUE)),
+               label = "View all"))), 
+      list(type = "buttons",
+        x = -0.1,
+        y = 0.7,
+        label = 'Category',
+        buttons = list(
+          list(method = "restyle",
+               args = list('visible', c(TRUE, FALSE, FALSE)),
+               label = "Environment"),
+          list(method = "restyle",
+               args = list('visible', c(FALSE, TRUE, FALSE)),
+               label = "Society"),
+          list(method = "restyle",
+               args = list('visible', c(FALSE, FALSE, TRUE)),
+               label = "Governance"))))) %>%      
+      layout(title = 'ESG wording. Fashion industry. BBK dictionary',
+              xaxis = list(title = 'year'),
+              yaxis = list(title = 'percentage', hoverformat = '.2%'), showlegend = FALSE) 
+```
+
+#### Comparison with ESG-Ratings ####
+Since our goal is to analyse whether 10-k reports carry valuable information regarding the company's ESG values, we further compare the ESG ratings received by the companies to the relative ESG sentiment from the 10-k report. 
+
+We conduct the analysis on token level, and not aggregated, to see whether some ESG-related words words appear particularly frequently.
+
+``` {r Read file with ESG scores, include = FALSE}
+ESG_scores_fashion <- read_excel(here("ESG_scores_fashion.xlsx"), sheet = "ESG", col_names = TRUE)
+names(ESG_scores_fashion)[4] <- "cik" #rename the cik column for convenience
+ESG_scores_fashion$cik <- as.character(ESG_scores_fashion$cik)
+
+ESG_scores_fashion_rf <- ESG_scores_fashion[,c(4,15:32)]
+
+for (i in 2:19) { # rename the columns as years
+names(ESG_scores_fashion_rf)[i] <- paste0(2023-i)}
+
+ESG_scores_fashion_rf_panel <- NULL 
+
+for (i in 1:nrow(ESG_scores_fashion_rf)) {
+  df <- ESG_scores_fashion_rf[i,]
+  df <- t(df)
+  df <- as.data.frame(df)
+  df <- df %>% mutate(cik = df[1,1])
+  df <- df[-1,]
+  df$year <- rownames(df)
+  ESG_scores_fashion_rf_panel <- rbind(ESG_scores_fashion_rf_panel, df)
+}
+
+plot_ly(data = ESG_scores_fashion_rf_panel, x = ~year, y = ~V1, color = ~cik) %>% 
+      add_markers() %>%      
+      layout(title = 'ESG rating evolution. Fashion',
+              xaxis = list(title = 'year'),
+              yaxis = list(title = 'rating', tickformat = '.0',hoverformat = '.2f'))
+
+ESG_scores_fashion_rf_panel <- merge(ESG_scores_fashion_rf_panel, fashion_BBK, by = c("cik", "year"))
+
+ESG_scores_fashion_rf_panel <- as.data.frame(ESG_scores_fashion_rf_panel)
+names(ESG_scores_fashion_rf_panel)[3] <- "rating"
+ESG_scores_fashion_rf_panel$rating <- as.numeric(ESG_scores_fashion_rf_panel$rating)
+ESG_scores_fashion_rf_panel <- na.omit(ESG_scores_fashion_rf_panel)
+
+
+ESG_scores_fashion_rf_panel_plot <- ESG_scores_fashion_rf_panel %>% group_by(year) %>%
+                                          summarise(mean_rating = median(rating),
+                                          mean_total = median(relative_env))
+
+# not 100% sure if we need this graph, since it's the average by year, which is not too informative
+esg_scores_fashion <- plot_ly(ESG_scores_fashion_rf_panel_plot, x = ~year, y = ~mean_rating, type = "scatter", name = "ESG rating") %>%
+  add_trace(x = ~year, y = ~mean_total, type = "scatter", yaxis = "y2", name = "ESG wording") %>%
+  layout(yaxis2 = list(overlaying = "y", side = "right"))
+```
+
+
+```{r Wordcloud CSR dictionary for fashion, echo = FALSE}
+### Select CSR dictionary tokens ###
+## selecting tokens
+fashion_csr_all_tokens <- tokens_select(fashion_tokens, dictionary_csr)
+fashion_csr_hum_tokens <- tokens_select(fashion_tokens, dictionary_csr$`HUMAN RIGHTS`)
+fashion_csr_emp_tokens <- tokens_select(fashion_tokens, dictionary_csr$EMPLOYEE)
+fashion_csr_soc_tokens <- tokens_select(fashion_tokens, dictionary_csr$`SOCIAL AND COMMUNITY`)
+fashion_csr_env_tokens <- tokens_select(fashion_tokens, dictionary_csr$ENVIRONMENT)
+## creating dfm
+fashion_dfm <- dfm(fashion_tokens)
+fashion_csr_all_dfm <- dfm(fashion_csr_all_tokens)
+fashion_csr_hum_dfm <- dfm(fashion_csr_hum_tokens)
+fashion_csr_emp_dfm <- dfm(fashion_csr_emp_tokens)
+fashion_csr_soc_dfm <- dfm(fashion_csr_soc_tokens)
+fashion_csr_env_dfm <- dfm(fashion_csr_env_tokens)
+## count token
+fashion_count_tokens <- ntoken(fashion_dfm)
+##
+library(quanteda.textplots)
+# wordcloud for most used words in the CSR dictionary
+textplot_wordcloud(fashion_csr_all_dfm, max_words = 100,
+                   color = c("grey80", "darkgoldenrod1", "tomato"))
+
+textplot_wordcloud(fashion_csr_env_dfm, max_words = 100,color = c("grey80", "darkgoldenrod1", "tomato"))
+textplot_wordcloud(fashion_csr_soc_dfm, max_words = 100,color = c("grey80", "darkgoldenrod1", "tomato"))
+textplot_wordcloud(fashion_csr_emp_dfm, max_words = 100,color = c("grey80", "darkgoldenrod1", "tomato"))
+```
+
+
+```{r Wordcloud BBK fashion}
+fashion_bbk_env_tokens <- tokens_select(fashion_tokens, dictionary_BBK$Environmental$Word)
+fashion_bbk_soc_tokens <- tokens_select(fashion_tokens, dictionary_BBK$Social$Word)
+fashion_bbk_gov_tokens <- tokens_select(fashion_tokens, dictionary_BBK$Governance$Word)
+
+fashion_bbk_env_dfm <- dfm(fashion_bbk_env_tokens)
+fashion_bbk_soc_dfm <- dfm(fashion_bbk_soc_tokens)
+fashion_bbk_gov_dfm <- dfm(fashion_bbk_gov_tokens)
+
+textplot_wordcloud(fashion_bbk_env_dfm, max_words = 100,color = c("grey80", "darkgoldenrod1", "tomato"))
+textplot_wordcloud(fashion_bbk_soc_dfm, max_words = 100,color = c("grey80", "darkgoldenrod1", "tomato"))
+textplot_wordcloud(fashion_bbk_gov_dfm, max_words = 100,color = c("grey80", "darkgoldenrod1", "tomato"))
+```
+
+```{r add data for market parameters, include = FALSE}
+
+fashion_market_data <- read_excel(here("revenue_figures.xlsx"), sheet = "fashion", col_names = TRUE)
+
+names(fashion_market_data)[3] <- "cik" #rename the cik column for convenience
+fashion_market_data$cik <- as.character(fashion_market_data$cik)
+
+for (i in 10:27) { # rename the columns as years
+names(fashion_market_data)[i] <- paste0(2031-i)}
+fashion_market_data_capex <- fashion_market_data[c(3, 10:27)]
+
+fashion_all_data_capex <- NULL 
+
+for (i in 1:nrow(fashion_market_data_capex)) {
+  df <- fashion_market_data_capex[i,]
+  df <- t(df)
+  df <- as.data.frame(df)
+  df <- df %>% mutate(cik = df[1,1])
+  df <- df[-1,]
+  df$year <- rownames(df)
+  fashion_all_data_capex <- rbind(fashion_all_data_capex, df)
+}
+
+names(fashion_all_data_capex)[1] <- "capex"
+
+# repeat the same to get prices 
+for (i in 28:45) { # rename the columns as years
+names(fashion_market_data)[i] <- paste0(2049-i)}
+fashion_market_data_prices <- fashion_market_data[c(3, 28:45)]
+
+fashion_all_data_prices <- NULL 
+
+for (i in 1:nrow(fashion_market_data_prices)) {
+  df <- fashion_market_data_prices[i,]
+  df <- t(df)
+  df <- as.data.frame(df)
+  df <- df %>% mutate(cik = df[1,1])
+  df <- df[-1,]
+  df$year <- rownames(df)
+  fashion_all_data_prices <- rbind(fashion_all_data_prices, df)
+}
+
+names(fashion_all_data_prices)[1] <- "share_price"
+
+# and revenues
+for (i in 46:63) { # rename the columns as years
+names(fashion_market_data)[i] <- paste0(2067-i)}
+fashion_market_data_revenues <- fashion_market_data[c(3, 46:63)]
+
+fashion_all_data_revenues <- NULL 
+
+for (i in 1:nrow(fashion_market_data_revenues)) {
+  df <- fashion_market_data_revenues[i,]
+  df <- t(df)
+  df <- as.data.frame(df)
+  df <- df %>% mutate(cik = df[1,1])
+  df <- df[-1,]
+  df$year <- rownames(df)
+  fashion_all_data_revenues <- rbind(fashion_all_data_revenues, df)
+}
+
+names(fashion_all_data_revenues)[1] <- "revenues"
+
+fashion_regression_df <- merge(fashion_all_data_revenues, fashion_all_data_capex, by = c("cik", "year"))
+fashion_regression_df <- fashion_regression_df %>% merge(fashion_all_data_prices, by = c("cik", "year"))
+fashion_regression_df <- fashion_regression_df %>% merge(ESG_scores_fashion_rf_panel, by = c("cik", "year"))
+fashion_regression_df <- fashion_regression_df %>% mutate(industry = "fashion")
+```
+#### Energy sector companies #######
+
+We further repeat the analysis on a sample of 30 randomly chosen energy sector companies.
+
+```{r Loading files for energy companies, include = FALSE}
+# load excel files with cik numbers for each industry with the companies
+energy <- read_excel(here("energy_cik.xlsx"), sheet = "Sheet1", col_names = TRUE)
+energy <- energy[, c(1, 4:14)]
+# keeping only the cik number
+energy_cik <- energy$CIK
+energy_cik<-as.data.frame(energy_cik)
+# load the 10Ks from downloaded files
+energy_10k <- NULL
+# loop that collects all reports for all companies for each industry
+# this will take some minutes!!!
+for (i in energy_cik) {
+  output <- readtext(here("energy_10k", i))
+  energy_10k <- rbind(energy_10k, output)
+}
+rm(output)
+# simple cleaning
+energy_10k$text <- str_remove_all(energy_10k$text, "\n•")
+energy_10k$text <- str_remove_all(energy_10k$text, "\n")
+# define columns into cik, report type and report year
+energy_10k <- separate(
+  energy_10k,
+  1,
+  into = c("cik", "type", "year", NA),
+  sep = "_",
+  remove = TRUE)
+# only keep year
+#keep the year and not the full date
+energy_10k <- separate(
+  energy_10k,
+  "year",
+  into = c("year", NA),
+  sep = "-",
+  remove = TRUE)
+```
+
+```{r Creating a Corpus for energy companies, include = FALSE}
+energy_corp <- corpus(energy_10k)
+energy_tokens <- energy_corp %>%
+  tokens(remove_punct = TRUE, # remove punctuation
+         remove_numbers = TRUE, # remove numbers
+         remove_symbols = TRUE,
+         remove_url = TRUE) %>% # remove symbols
+  tokens_tolower() # everything to lower cases
+# takes some minutes!
+words_to_be_removed <- c(stopwords("english"), "million", "fiscal", "january", "february",
+           "march", "april", "may", "june", "july", "august", "september",
+           "october", "november", "december", "business", "net", "s")
+# //KEEP IN MIND// to update the list in the appendix of removed words
+energy_tokens <- energy_tokens %>%
+  tokens_remove(words_to_be_removed)
+# apply Flesch readability measure (takes a few minutes)
+energy_rd_flesch <- energy_corp %>%
+  textstat_readability(measure = "Flesch", remove_hyphens = TRUE)
+# apply FOG readability measure (takes a few minutes)
+energy_rd_fog <- energy_corp %>%
+  textstat_readability(measure = "FOG", remove_hyphens = TRUE)
+```
+
+The plot shows that the calculated complexity by Flesch increases and becomes increasingly similar. The same was preceived for the sample of fashion companies before. There is no significant difference in the readability comparing the fashion and the enegry sample. The average Flesch readability score at around `r round(mean(energy_rd_flesch$Flesch), digits = 2)` for the energy companies is nearly the same as for the fashion sample. Both scores indicating very complex and difficult to read text sources. However, for the energy sample it tends to have few more outliers.
+
+```{r Plot readability Flesch for energy, echo=FALSE}
+# all companies, all years
+plot_flesch_energy <- ggplotly(ggplot(energy_rd_flesch, aes(x=energy_10k$year, y =Flesch, colour=energy_10k$cik)) + geom_point() +  ggtitle("Flesch - Readability for energy companies"), tooltip = c("colour", "y", "x") )
+
+x <- list(
+    title = "year")
+
+y <- list(
+    title = "Readability score")
+
+plot_flesch_energy %>% layout(xaxis = x, yaxis = y)
+
+```
+
+Also regarding the average FOG score for our sample of 30 energy companies from the US which is at around `r round(mean(energy_rd_fog$FOG), digits = 2)` it scores very similar as the average for the fashion companies. The same picture about the trend is seen. Also the ouliers within the enegry companies do persist the FOG measure. By further examination of the outlier 10-Ks we do not find any untypical nature of text.
+
+```{r Readability plots FOG for energy, echo = FALSE, fig.width = 10 , fig.fullwidth=TRUE}
+# all companies, all years
+plot_flesch_energy_fog <- ggplotly(ggplot(energy_rd_fog, aes(x=energy_10k$year, y =FOG, colour=energy_10k$cik)) + geom_point() +  ggtitle("FOG - Readability for energy companies"), tooltip = c("colour", "y", "x") )
+
+x <- list(
+    title = "year")
+
+y <- list(
+    title = "Readability score")
+
+plot_flesch_energy_fog %>% layout(xaxis = x, yaxis = y)
+rm(x,y)
+```
+
+```{r Correspondance analysis 2004 and 2020 energy, include = FALSE}
+# analysis only on one year across companies to have only max 27 data points (otherwise way too much)
+# filter out the years 2004 and 2020 to show difference in correspondance
+energy_2004 <- energy_10k %>%
+  filter(year == 2004)
+energy_2020 <- energy_10k %>%
+  filter(year == 2020)
+## create corpus
+energy_04_corp <- corpus(energy_2004)
+energy_20_corp <- corpus(energy_2020)
+## Tokenization
+energy_04_tokens <- energy_04_corp %>%
+  tokens(remove_punct = TRUE, # remove punctuation
+         remove_numbers = TRUE, # remove numbers
+         remove_symbols = TRUE) %>% # remove symbols
+  tokens_tolower() # everything to lower cases
+energy_04_tokens <- energy_04_tokens %>%
+  tokens_remove(stopwords("english"))
+energy_20_tokens <- energy_20_corp %>%
+  tokens(remove_punct = TRUE, # remove punctuation
+         remove_numbers = TRUE, # remove numbers
+         remove_symbols = TRUE) %>% # remove symbols
+  tokens_tolower() # everything to lower cases
+energy_20_tokens <- energy_20_tokens %>%
+  tokens_remove(stopwords("english"))
+## DFM
+energy_04_dfm <- dfm(energy_04_tokens)
+energy_20_dfm <- dfm(energy_20_tokens)
+## 1D correspondence analysis
+energy_04_ca <- textmodel_ca(energy_04_dfm)
+energy_20_ca <- textmodel_ca(energy_20_dfm)
+## 2D correspondence analysis
+energy_04_ca2 <- data.frame(dim1 = coef(energy_04_ca, doc_dim = 1)$coef_document, 
+                       dim2 = coef(energy_04_ca, doc_dim = 2)$coef_document,
+                       doc = energy_04_ca$rownames)
+energy_20_ca2 <- data.frame(dim1 = coef(energy_20_ca, doc_dim = 1)$coef_document, 
+                       dim2 = coef(energy_20_ca, doc_dim = 2)$coef_document,
+                       doc = energy_20_ca$rownames)
+energy_04_plot <- energy_04_ca2 %>%
+  ggplot(aes(x=dim1, y=dim2)) +
+  geom_text(aes(label = doc)) +
+  theme_classic() +
+  labs(x="Dimension 1", y="Dimension 2") + ggtitle("2D Correspondance analysis 2004")
+energy_20_plot <- energy_20_ca2 %>%
+  ggplot(aes(x=dim1, y=dim2)) +
+  geom_text(aes(label = doc)) +
+  theme_classic() +
+  labs(x="Dimension 1", y="Dimension 2") + ggtitle("2D Correspondance analysis 2020")
+```
+
+
+```{r Apply CSR dict for energy, include = FALSE}
+energy_CSR <- dfm(energy_tokens, dictionary = dictionary_csr) # set up a dfm with word count by category
+energy_CSR <- convert(energy_CSR, to = "data.frame") # convert it to df for easy merge
+energy_CSR <- cbind(energy_CSR, energy_10k[,c(1,3)]) # merge with cik and year data
+count_tokens_energy <- ntoken(energy_tokens) #counts total tokens in the text
+count_tokens_energy <- as.data.frame(count_tokens_energy) # convert to df for easy merge
+energy_CSR <- cbind(energy_CSR, count_tokens_energy) # merge with the token count
+# find the relative ESG-related words 
+energy_CSR_total <- energy_CSR %>% 
+        select(ENVIRONMENT, EMPLOYEE, 'HUMAN RIGHTS', 'SOCIAL AND COMMUNITY') %>% 
+        rowSums(na.rm=TRUE)
+  
+energy_CSR <- cbind(energy_CSR, energy_CSR_total) 
+rm(energy_CSR_total)
+  
+energy_CSR <- energy_CSR %>% mutate(relative_env = ENVIRONMENT/count_tokens_energy,
+                                    relative_soc = `SOCIAL AND COMMUNITY`/count_tokens_energy,
+                                    relative_empl = EMPLOYEE/count_tokens_energy,
+                                    relative_humans = `HUMAN RIGHTS`/count_tokens_energy,
+                                    relative_overall = energy_CSR_total/count_tokens_energy)
+round(mean(energy_CSR$relative_env), digits = 4)*100
+round(mean(energy_CSR$relative_soc), digits = 4)*100
+round(mean(energy_CSR$relative_empl), digits = 4)*100
+```
+
+```{r Relative ESG wording CSR dict for energy, echo = FALSE}
+plot_ly(energy_CSR, x = ~year, y = ~relative_env, type='scatter', mode='markers',
+             text = ~paste("CIK :", cik,
+                           "<br> Score :", paste0(round(100*relative_env, digits = 3), "%"), 
+                           "<br> Year :", year),
+             textposition = "auto",
+             hoverinfo = "text") %>%
+  
+  add_trace(y = ~relative_humans, type='scatter', mode='markers',
+             text = ~paste("CIK :", cik,
+                           "<br> Score :", paste0(round(100*relative_humans, digits = 3), "%"), 
+                           "<br> Year :", year),
+             textposition = "auto",
+             hoverinfo = "text") %>%
+  
+  add_trace(y = ~relative_empl, type='scatter', mode='markers',
+             text = ~paste("CIK :", cik,
+                           "<br> Score :", paste0(round(100*relative_empl, digits = 3), "%"), 
+                           "<br> Year :", year),
+             textposition = "auto",
+             hoverinfo = "text") %>%
+  layout(
+    updatemenus = list(
+      list(
+        type = "buttons",
+        x = -0.1,
+        y = 0.8,
+        label = 'Category',
+        buttons = list(
+          list(method = "restyle",
+               args = list('visible', c(TRUE, TRUE, TRUE)),
+               label = "View all"))), 
+      list(type = "buttons",
+        x = -0.1,
+        y = 0.7,
+        label = 'Category',
+        buttons = list(
+          list(method = "restyle",
+               args = list('visible', c(TRUE, FALSE, FALSE)),
+               label = "Environment"),
+          list(method = "restyle",
+               args = list('visible', c(FALSE, TRUE, FALSE)),
+               label = "Society"),
+          list(method = "restyle",
+               args = list('visible', c(FALSE, FALSE, TRUE)),
+               label = "Employees"))))) %>%      
+      layout(title = 'ESG wording. Energy industry. CSR dictionary',
+              xaxis = list(title = 'year'),
+              yaxis = list(title = 'percentage', hoverformat = '.2f'), showlegend = FALSE) 
+
+```
+
+```{r Wordcloud CSR dictionary for energy, echo = FALSE}
+### Select CSR dictionary tokens ###
+## selecting tokens
+energy_CSR_all_tokens <- tokens_select(energy_tokens, dictionary_csr)
+energy_CSR_hum_tokens <- tokens_select(energy_tokens, dictionary_csr$`HUMAN RIGHTS`)
+energy_CSR_emp_tokens <- tokens_select(energy_tokens, dictionary_csr$EMPLOYEE)
+energy_CSR_soc_tokens <- tokens_select(energy_tokens, dictionary_csr$`SOCIAL AND COMMUNITY`)
+energy_CSR_env_tokens <- tokens_select(energy_tokens, dictionary_csr$ENVIRONMENT)
+energy_BBK_all_tokens <- tokens_select(energy_tokens, dictionary_bbk$Topic=="Governance")
+## creating dfm
+energy_dfm <- dfm(energy_tokens)
+energy_CSR_all_dfm <- dfm(energy_CSR_all_tokens)
+energy_CSR_hum_dfm <- dfm(energy_CSR_hum_tokens)
+energy_CSR_emp_dfm <- dfm(energy_CSR_emp_tokens)
+energy_CSR_soc_dfm <- dfm(energy_CSR_soc_tokens)
+energy_CSR_env_dfm <- dfm(energy_CSR_env_tokens)
+energy_BBK_all_dfm <- dfm(energy_BBK_all_tokens)
+## count token
+energy_count_tokens <- ntoken(energy_dfm)
+# wordcloud for most used words in the CSR dictionary
+textplot_wordcloud(energy_CSR_all_dfm, max_words = 100,
+                   color = c("grey80", "darkgoldenrod1", "tomato"))
+
+textplot_wordcloud(energy_CSR_env_dfm, max_words = 100,color = c("grey80", "darkgoldenrod1", "tomato"))
+textplot_wordcloud(energy_CSR_soc_dfm, max_words = 100,color = c("grey80", "darkgoldenrod1", "tomato"))
+textplot_wordcloud(energy_CSR_emp_dfm, max_words = 100,color = c("grey80", "darkgoldenrod1", "tomato"))
+
+```
+
+```{r Wordcloud BBK energy}
+energy_bbk_env_tokens <- tokens_select(energy_tokens, dictionary_BBK$Environmental$Word)
+energy_bbk_soc_tokens <- tokens_select(energy_tokens, dictionary_BBK$Social$Word)
+energy_bbk_gov_tokens <- tokens_select(energy_tokens, dictionary_BBK$Governance$Word)
+
+energy_bbk_env_dfm <- dfm(energy_bbk_env_tokens)
+energy_bbk_soc_dfm <- dfm(energy_bbk_soc_tokens)
+energy_bbk_gov_dfm <- dfm(energy_bbk_gov_tokens)
+
+textplot_wordcloud(energy_bbk_env_dfm, max_words = 100,color = c("grey80", "darkgoldenrod1", "tomato"))
+textplot_wordcloud(energy_bbk_soc_dfm, max_words = 100,color = c("grey80", "darkgoldenrod1", "tomato"))
+textplot_wordcloud(energy_bbk_gov_dfm, max_words = 100,color = c("grey80", "darkgoldenrod1", "tomato"))
+```
+
+```{r Preparation relative ESG wording BBK dict for energy, inlcude = FALSE}
+energy_BBK <- dfm(energy_tokens, dictionary = dictionary_BBK, valuetype = "glob") # set up a dfm with word count by category
+energy_BBK <- convert(energy_BBK, to = "data.frame") # convert it to df for easy merge
+energy_BBK <- cbind(energy_BBK, energy_10k[,c(1,3)]) # merge with cik and year data
+energy_BBK <- cbind(energy_BBK, count_tokens_energy) # merge with the token count
+# energy_BBK$year <- as.Date(energy_BBK$year, format="%d/%m/%Y") 
+# find the relative ESG-related words 
+total_ESG_only_BBK <- energy_BBK %>% 
+  select(Governance.Word, Environmental.Word, Social.Word) %>% 
+  rowSums(na.rm=TRUE)
+energy_BBK <- cbind(energy_BBK, total_ESG_only_BBK) 
+energy_BBK <- energy_BBK %>% mutate(relative_govern = Governance.Word/count_tokens_energy,
+                                      relative_env = Environmental.Word/count_tokens_energy,
+                                      relative_soc = Social.Word/count_tokens_energy,
+                                      relative_overall = total_ESG_only_BBK/count_tokens_energy)
+round(mean(energy_BBK$relative_env), digits = 4)*100
+round(mean(energy_BBK$relative_soc), digits = 4)*100
+round(mean(energy_BBK$relative_soc), digits = 4)*100
+round(mean(energy_BBK$relative_govern), digits = 4)*100
+```
+
+```{r Relative ESG wording BBK dict for energy, include = TRUE}
+
+plot_ly(energy_BBK, x = ~year, y = ~relative_env, type='scatter', mode='markers',
+             text = ~paste("CIK :", cik,
+                           "<br> Score :", paste0(round(100*relative_env, digits = 3), "%"), 
+                           "<br> Year :", year),
+             textposition = "auto",
+             hoverinfo = "text") %>%
+  
+  add_trace(y = ~relative_soc, type='scatter', mode='markers',
+             text = ~paste("CIK :", cik,
+                           "<br> Score :", paste0(round(100*relative_soc, digits = 3), "%"), 
+                           "<br> Year :", year),
+             textposition = "auto",
+             hoverinfo = "text") %>%
+  
+  add_trace(y = ~relative_govern, type='scatter', mode='markers',
+             text = ~paste("CIK :", cik,
+                           "<br> Score :", paste0(round(100*relative_govern, digits = 3), "%"), 
+                           "<br> Year :", year),
+             textposition = "auto",
+             hoverinfo = "text") %>%
+  layout(
+    updatemenus = list(
+      list(
+        type = "buttons",
+        x = -0.1,
+        y = 0.8,
+        label = 'Category',
+        buttons = list(
+          list(method = "restyle",
+               args = list('visible', c(TRUE, TRUE, TRUE)),
+               label = "View all"))), 
+      list(type = "buttons",
+        x = -0.1,
+        y = 0.7,
+        label = 'Category',
+        buttons = list(
+          list(method = "restyle",
+               args = list('visible', c(TRUE, FALSE, FALSE)),
+               label = "Environment"),
+          list(method = "restyle",
+               args = list('visible', c(FALSE, TRUE, FALSE)),
+               label = "Society"),
+          list(method = "restyle",
+               args = list('visible', c(FALSE, FALSE, TRUE)),
+               label = "Governance"))))) %>%      
+      layout(title = 'ESG wording. Energy industry. BBK dictionary',
+              xaxis = list(title = 'year'),
+              yaxis = list(title = 'percentage', hoverformat = '.2%'), showlegend = FALSE) 
+```
+``` {r Read file with ESG scores Energy, include = FALSE}
+ESG_scores_energy <- read_excel(here("ESG_scores_energy.xlsx"), sheet = "ESG", col_names = TRUE)
+names(ESG_scores_energy)[3] <- "cik" #rename the cik column for convenience
+ESG_scores_energy$cik <- as.character(ESG_scores_energy$cik)
+
+ESG_scores_energy_rf <- ESG_scores_energy[,c(3,13:30)]
+
+for (i in 2:19) { # rename the columns as years
+names(ESG_scores_energy_rf)[i] <- paste0(2023-i)}
+
+ESG_scores_energy_rf_panel <- NULL 
+
+for (i in 1:nrow(ESG_scores_energy_rf)) {
+  df <- ESG_scores_energy_rf[i,]
+  df <- t(df)
+  df <- as.data.frame(df)
+  df <- df %>% mutate(cik = df[1,1])
+  df <- df[-1,]
+  df$year <- rownames(df)
+  ESG_scores_energy_rf_panel <- rbind(ESG_scores_energy_rf_panel, df)
+}
+
+
+ESG_scores_energy_rf_panel <- merge(ESG_scores_energy_rf_panel, energy_BBK, by = c("cik", "year"))
+
+ESG_scores_energy_rf_panel <- as.data.frame(ESG_scores_energy_rf_panel)
+names(ESG_scores_energy_rf_panel)[3] <- "rating"
+ESG_scores_energy_rf_panel$rating <- as.numeric(ESG_scores_energy_rf_panel$rating)
+ESG_scores_energy_rf_panel <- na.omit(ESG_scores_energy_rf_panel)
+
+```
+
+```{r add data for market parameters Energy, include = FALSE}
+
+energy_market_data <- read_excel(here("revenue_figures.xlsx"), sheet = "energy", col_names = TRUE)
+
+names(energy_market_data)[3] <- "cik" #rename the cik column for convenience
+energy_market_data$cik <- as.character(energy_market_data$cik)
+
+for (i in 10:27) { # rename the columns as years
+names(energy_market_data)[i] <- paste0(2031-i)}
+energy_market_data_capex <- energy_market_data[c(3, 10:27)]
+
+energy_all_data_capex <- NULL 
+
+for (i in 1:nrow(energy_market_data_capex)) {
+  df <- energy_market_data_capex[i,]
+  df <- t(df)
+  df <- as.data.frame(df)
+  df <- df %>% mutate(cik = df[1,1])
+  df <- df[-1,]
+  df$year <- rownames(df)
+  energy_all_data_capex <- rbind(energy_all_data_capex, df)
+}
+
+names(energy_all_data_capex)[1] <- "capex"
+
+# repeat the same to get prices 
+for (i in 28:45) { # rename the columns as years
+names(energy_market_data)[i] <- paste0(2049-i)}
+energy_market_data_prices <- energy_market_data[c(3, 28:45)]
+
+energy_all_data_prices <- NULL 
+
+for (i in 1:nrow(energy_market_data_prices)) {
+  df <- energy_market_data_prices[i,]
+  df <- t(df)
+  df <- as.data.frame(df)
+  df <- df %>% mutate(cik = df[1,1])
+  df <- df[-1,]
+  df$year <- rownames(df)
+  energy_all_data_prices <- rbind(energy_all_data_prices, df)
+}
+
+names(energy_all_data_prices)[1] <- "share_price"
+
+# and revenues
+for (i in 46:63) { # rename the columns as years
+names(energy_market_data)[i] <- paste0(2067-i)}
+energy_market_data_revenues <- energy_market_data[c(3, 46:63)]
+
+energy_all_data_revenues <- NULL 
+
+for (i in 1:nrow(energy_market_data_revenues)) {
+  df <- energy_market_data_revenues[i,]
+  df <- t(df)
+  df <- as.data.frame(df)
+  df <- df %>% mutate(cik = df[1,1])
+  df <- df[-1,]
+  df$year <- rownames(df)
+  energy_all_data_revenues <- rbind(energy_all_data_revenues, df)
+}
+
+names(energy_all_data_revenues)[1] <- "revenues"
+
+energy_regression_df <- merge(energy_all_data_revenues, energy_all_data_capex, by = c("cik", "year"))
+energy_regression_df <- energy_regression_df %>% merge(energy_all_data_prices, by = c("cik", "year"))
+energy_regression_df <- energy_regression_df %>% merge(ESG_scores_energy_rf_panel, by = c("cik", "year"))
+energy_regression_df <- energy_regression_df %>% mutate(industry = "energy")
+```
+
+
+
+
+#### Beverages sector companies #######
+
+We further repeat the analysis on a sample of 25 beverages sector companies listed on an US exchange.
+
+```{r Loading files for beverages companies, include = FALSE}
+# load excel files with cik numbers for each industry with the companies
+bev <- read_excel(here("bev_cik.xlsx"), sheet = "Sheet1", col_names = TRUE)
+bev <- bev[, c(1, 4:14)] # //TO DO// is it the right column??
+# keeping only the cik number
+bev_cik <- bev$CIK
+bev_cik<-as.data.frame(bev_cik)
+# load the 10Ks from downloaded files
+bev_10k <- NULL
+# loop that collects all reports for all companies for each industry
+# this will take some minutes!!!
+for (i in bev_cik) {
+  output <- readtext(here("bev_10k", i))
+  bev_10k <- rbind(bev_10k, output)
+}
+rm(output)
+# simple cleaning
+bev_10k$text <- str_remove_all(bev_10k$text, "\n•")
+bev_10k$text <- str_remove_all(bev_10k$text, "\n")
+# define columns into cik, report type and report year
+bev_10k <- separate(
+  bev_10k,
+  1,
+  into = c("cik", "type", "year", NA),
+  sep = "_",
+  remove = TRUE)
+# only keep year
+#keep the year and not the full date
+bev_10k <- separate(
+  bev_10k,
+  "year",
+  into = c("year", NA),
+  sep = "-",
+  remove = TRUE)
+```
+
+```{r Creating a Corpus for beverages companies, include = FALSE}
+bev_corp <- corpus(bev_10k)
+bev_tokens <- bev_corp %>%
+  tokens(remove_punct = TRUE, # remove punctuation
+         remove_numbers = TRUE, # remove numbers
+         remove_symbols = TRUE,
+         remove_url = TRUE) %>% # remove symbols
+  tokens_tolower() # everything to lower cases
+# takes some minutes!
+words_to_be_removed <- c(stopwords("english"), "million", "fiscal", "january", "february",
+           "march", "april", "may", "june", "july", "august", "september",
+           "october", "november", "december", "business", "net", "s")
+# //KEEP IN MIND// to update the list in the appendix of removed words
+bev_tokens <- bev_tokens %>%
+  tokens_remove(words_to_be_removed)
+# apply Flesch readability measure (takes a few minutes)
+bev_rd_flesch <- bev_corp %>%
+  textstat_readability(measure = "Flesch", remove_hyphens = TRUE)
+# apply FOG readability measure (takes a few minutes)
+bev_rd_fog <- bev_corp %>%
+  textstat_readability(measure = "FOG", remove_hyphens = TRUE)
+```
+
+The average Flesch readability score for the beverages companies is at around `r round(mean(bev_rd_flesch$Flesch), digits = 2)`, indicating a very complex and difficult to read text source. //TO DO// Check outliers with very negative Flesch score!
+
+```{r Plot readability Flesch for beverages, echo=FALSE}
+# all companies, all years
+
+plot_flesch_bev <- ggplotly(ggplot(bev_rd_flesch, aes(x=bev_10k$year, y =Flesch, colour=bev_10k$cik)) + geom_point() +  ggtitle("Flesch - Readability for beverage companies"), tooltip = c("colour", "y", "x") )
+
+x <- list(
+    title = "year")
+
+y <- list(
+    title = "Readability score")
+
+plot_flesch_bev %>% layout(xaxis = x, yaxis = y)
+
+```
+
+The average FOG score for our sample of 25 beverage companies from the US is `r round(mean(bev_rd_fog$FOG), digits = 2)`.
+
+```{r Readability plots FOG for beverages, echo = FALSE, fig.width = 10 , fig.fullwidth=TRUE}
+# all companies, all years
+plot_bev_fog <- ggplotly(ggplot(bev_rd_fog, aes(x=bev_10k$year, y =FOG, colour=bev_10k$cik)) + geom_point() +  ggtitle("FOG - Readability for beverage companies"), tooltip = c("colour", "y", "x") )
+
+x <- list(
+    title = "year")
+
+y <- list(
+    title = "Readability score")
+
+plot_bev_fog %>% layout(xaxis = x, yaxis = y)
+```
+
+```{r Correspondance analysis 2004 and 2020 beverages, include = FALSE}
+# analysis only on one year across companies to have only max 27 data points (otherwise way too much)
+# filter out the years 2004 and 2020 to show difference in correspondance
+bev_2004 <- bev_10k %>%
+  filter(year == 2004)
+bev_2020 <- bev_10k %>%
+  filter(year == 2020)
+## create corpus
+bev_04_corp <- corpus(bev_2004)
+bev_20_corp <- corpus(bev_2020)
+## Tokenization
+bev_04_tokens <- bev_04_corp %>%
+  tokens(remove_punct = TRUE, # remove punctuation
+         remove_numbers = TRUE, # remove numbers
+         remove_symbols = TRUE) %>% # remove symbols
+  tokens_tolower() # everything to lower cases
+bev_04_tokens <- bev_04_tokens %>%
+  tokens_remove(stopwords("english"))
+bev_20_tokens <- bev_20_corp %>%
+  tokens(remove_punct = TRUE, # remove punctuation
+         remove_numbers = TRUE, # remove numbers
+         remove_symbols = TRUE) %>% # remove symbols
+  tokens_tolower() # everything to lower cases
+bev_20_tokens <- bev_20_tokens %>%
+  tokens_remove(stopwords("english"))
+## DFM
+bev_04_dfm <- dfm(bev_04_tokens)
+bev_20_dfm <- dfm(bev_20_tokens)
+## 1D correspondence analysis
+bev_04_ca <- textmodel_ca(bev_04_dfm)
+bev_20_ca <- textmodel_ca(bev_20_dfm)
+## 2D correspondence analysis
+bev_04_ca2 <- data.frame(dim1 = coef(bev_04_ca, doc_dim = 1)$coef_document, 
+                       dim2 = coef(bev_04_ca, doc_dim = 2)$coef_document,
+                       doc = bev_04_ca$rownames)
+bev_20_ca2 <- data.frame(dim1 = coef(bev_20_ca, doc_dim = 1)$coef_document, 
+                       dim2 = coef(bev_20_ca, doc_dim = 2)$coef_document,
+                       doc = bev_20_ca$rownames)
+bev_04_ca2 %>%
+  ggplot(aes(x=dim1, y=dim2)) +
+  geom_text(aes(label = doc)) +
+  theme_classic() +
+  labs(x="Dimension 1", y="Dimension 2") + ggtitle("2D Correspondance analysis 2004")
+bev_20_ca2 %>%
+  ggplot(aes(x=dim1, y=dim2)) +
+  geom_text(aes(label = doc)) +
+  theme_classic() +
+  labs(x="Dimension 1", y="Dimension 2") + ggtitle("2D Correspondance analysis 2020")
+```
+
+
+
+```{r Apply CSR dict for bev, include = FALSE}
+bev_CSR <- dfm(bev_tokens, dictionary = dictionary_csr) # set up a dfm with word count by category
+bev_CSR <- convert(bev_CSR, to = "data.frame") # convert it to df for easy merge
+bev_CSR <- cbind(bev_CSR, bev_10k[,c(1,3)]) # merge with cik and year data
+count_tokens_bev <- ntoken(bev_tokens) #counts total tokens in the text
+count_tokens_bev <- as.data.frame(count_tokens_bev) # convert to df for easy merge
+bev_CSR <- cbind(bev_CSR, count_tokens_bev) # merge with the token count
+# find the relative ESG-related words 
+bev_CSR_total <- bev_CSR %>% 
+        select(ENVIRONMENT, EMPLOYEE, 'HUMAN RIGHTS', 'SOCIAL AND COMMUNITY') %>% 
+        rowSums(na.rm=TRUE)
+  
+bev_CSR <- cbind(bev_CSR, bev_CSR_total) 
+rm(bev_CSR_total)
+  
+bev_CSR <- bev_CSR %>% mutate(relative_env = ENVIRONMENT/count_tokens_bev,
+                                              relative_soc = `SOCIAL AND COMMUNITY`/count_tokens_bev,
+                                              relative_empl = EMPLOYEE/count_tokens_bev,
+                                              relative_humans = `HUMAN RIGHTS`/count_tokens_bev,
+                                              relative_overall = bev_CSR_total/count_tokens_bev)
+round(mean(bev_CSR$relative_env), digits = 4)*100
+round(mean(bev_CSR$relative_soc), digits = 4)*100
+round(mean(bev_CSR$relative_empl), digits = 4)*100
+```
+
+```{r Relative ESG wording CSR dict for bev, echo = FALSE}
+plot_ly(bev_CSR, x = ~year, y = ~relative_env, type='scatter', mode='markers',
+             text = ~paste("CIK :", cik,
+                           "<br> Score :", paste0(round(100*relative_env, digits = 3), "%"), 
+                           "<br> Year :", year),
+             textposition = "auto",
+             hoverinfo = "text") %>%
+  
+  add_trace(y = ~relative_humans, type='scatter', mode='markers',
+             text = ~paste("CIK :", cik,
+                           "<br> Score :", paste0(round(100*relative_humans, digits = 3), "%"), 
+                           "<br> Year :", year),
+             textposition = "auto",
+             hoverinfo = "text") %>%
+  
+  add_trace(y = ~relative_empl, type='scatter', mode='markers',
+             text = ~paste("CIK :", cik,
+                           "<br> Score :", paste0(round(100*relative_empl, digits = 3), "%"), 
+                           "<br> Year :", year),
+             textposition = "auto",
+             hoverinfo = "text") %>%
+  layout(
+    updatemenus = list(
+      list(
+        type = "buttons",
+        x = -0.1,
+        y = 0.8,
+        label = 'Category',
+        buttons = list(
+          list(method = "restyle",
+               args = list('visible', c(TRUE, TRUE, TRUE)),
+               label = "View all"))), 
+      list(type = "buttons",
+        x = -0.1,
+        y = 0.7,
+        label = 'Category',
+        buttons = list(
+          list(method = "restyle",
+               args = list('visible', c(TRUE, FALSE, FALSE)),
+               label = "Environment"),
+          list(method = "restyle",
+               args = list('visible', c(FALSE, TRUE, FALSE)),
+               label = "Society"),
+          list(method = "restyle",
+               args = list('visible', c(FALSE, FALSE, TRUE)),
+               label = "Employees"))))) %>%      
+      layout(title = 'ESG wording. Beverage industry. CSR dictionary',
+              xaxis = list(title = 'year'),
+              yaxis = list(title = 'percentage', hoverformat = '.2f'), showlegend = FALSE) 
+
+```
+
+```{r Wordcloud CSR dictionary for beverages, echo = FALSE}
+### Select CSR dictionary tokens ###
+## selecting tokens
+bev_CSR_all_tokens <- tokens_select(bev_tokens, dictionary_csr)
+bev_CSR_hum_tokens <- tokens_select(bev_tokens, dictionary_csr$`HUMAN RIGHTS`)
+bev_CSR_emp_tokens <- tokens_select(bev_tokens, dictionary_csr$EMPLOYEE)
+bev_CSR_soc_tokens <- tokens_select(bev_tokens, dictionary_csr$`SOCIAL AND COMMUNITY`)
+bev_CSR_env_tokens <- tokens_select(bev_tokens, dictionary_csr$ENVIRONMENT)
+## creating dfm
+bev_dfm <- dfm(bev_tokens)
+bev_CSR_all_dfm <- dfm(bev_CSR_all_tokens)
+bev_CSR_hum_dfm <- dfm(bev_CSR_hum_tokens)
+bev_CSR_emp_dfm <- dfm(bev_CSR_emp_tokens)
+bev_CSR_soc_dfm <- dfm(bev_CSR_soc_tokens)
+bev_CSR_env_dfm <- dfm(bev_CSR_env_tokens)
+## count token
+bev_count_tokens <- ntoken(bev_dfm)
+# wordcloud for most used words in the CSR dictionary
+textplot_wordcloud(bev_CSR_all_dfm, max_words = 100,
+                   color = c("grey80", "darkgoldenrod1", "tomato"))
+textplot_wordcloud(bev_CSR_env_dfm, max_words = 100, color = c("grey80", "darkgoldenrod1", "tomato"))
+textplot_wordcloud(bev_CSR_emp_dfm, max_words = 100, color = c("grey80", "darkgoldenrod1", "tomato"))
+textplot_wordcloud(bev_CSR_soc_dfm, max_words = 100, color = c("grey80", "darkgoldenrod1", "tomato"))
+```
+
+```{r Wordcloud BBK beverages}
+bev_bbk_env_tokens <- tokens_select(bev_tokens, dictionary_BBK$Environmental$Word)
+bev_bbk_soc_tokens <- tokens_select(bev_tokens, dictionary_BBK$Social$Word)
+bev_bbk_gov_tokens <- tokens_select(bev_tokens, dictionary_BBK$Governance$Word)
+
+bev_bbk_env_dfm <- dfm(bev_bbk_env_tokens)
+bev_bbk_soc_dfm <- dfm(bev_bbk_soc_tokens)
+bev_bbk_gov_dfm <- dfm(bev_bbk_gov_tokens)
+
+textplot_wordcloud(bev_bbk_env_dfm, max_words = 100,color = c("grey80", "darkgoldenrod1", "tomato"))
+textplot_wordcloud(bev_bbk_soc_dfm, max_words = 100,color = c("grey80", "darkgoldenrod1", "tomato"))
+textplot_wordcloud(bev_bbk_gov_dfm, max_words = 100,color = c("grey80", "darkgoldenrod1", "tomato"))
+```
+
+```{r Preparation relative ESG wording BBK dict for bev, inlcude = FALSE}
+bev_BBK <- dfm(bev_tokens, dictionary = dictionary_BBK, valuetype = "glob") # set up a dfm with word count by category
+bev_BBK <- convert(bev_BBK, to = "data.frame") # convert it to df for easy merge
+bev_BBK <- cbind(bev_BBK, bev_10k[,c(1,3)]) # merge with cik and year data
+bev_BBK <- cbind(bev_BBK, count_tokens_bev) # merge with the token count
+# bev_BBK$year <- as.Date(bev_BBK$year, format="%d/%m/%Y") 
+# find the relative ESG-related words 
+total_ESG_only_BBK <- bev_BBK %>% 
+  select(Governance.Word, Environmental.Word, Social.Word) %>% 
+  rowSums(na.rm=TRUE)
+bev_BBK <- cbind(bev_BBK, total_ESG_only_BBK) 
+bev_BBK <- bev_BBK %>% mutate(relative_govern = Governance.Word/count_tokens_bev,
+                                      relative_env = Environmental.Word/count_tokens_bev,
+                                      relative_soc = Social.Word/count_tokens_bev,
+                                      relative_overall = total_ESG_only_BBK/count_tokens_bev)
+round(mean(bev_BBK$relative_env), digits = 4)*100
+round(mean(bev_BBK$relative_soc), digits = 4)*100
+round(mean(bev_BBK$relative_govern), digits = 4)*100
+```
+
+```{r Relative ESG wording BBK dict for bev, include = TRUE}
+
+plot_ly(bev_BBK, x = ~year, y = ~relative_env, type='scatter', mode='markers',
+             text = ~paste("CIK :", cik,
+                           "<br> Score :", paste0(round(100*relative_env, digits = 3), "%"), 
+                           "<br> Year :", year,
+                           "<br> Type :", "Environment"),
+             textposition = "auto",
+             hoverinfo = "text") %>%
+  
+  add_trace(y = ~relative_soc, type='scatter', mode='markers',
+             text = ~paste("CIK :", cik,
+                           "<br> Score :", paste0(round(100*relative_soc, digits = 3), "%"), 
+                           "<br> Year :", year,
+                           "<br> Type :", "Society"),
+             textposition = "auto",
+             hoverinfo = "text") %>%
+  
+  add_trace(y = ~relative_govern, type='scatter', mode='markers',
+             text = ~paste("CIK :", cik,
+                           "<br> Score :", paste0(round(100*relative_govern, digits = 3), "%"), 
+                           "<br> Year :", year,
+                           "<br> Type :", "Governance"),
+             textposition = "auto",
+             hoverinfo = "text") %>%
+  layout(
+    updatemenus = list(
+      list(
+        type = "buttons",
+        x = -0.1,
+        y = 0.8,
+        label = 'Category',
+        buttons = list(
+          list(method = "restyle",
+               args = list('visible', c(TRUE, TRUE, TRUE)),
+               label = "View all"))), 
+      list(type = "buttons",
+        x = -0.1,
+        y = 0.7,
+        label = 'Category',
+        buttons = list(
+          list(method = "restyle",
+               args = list('visible', c(TRUE, FALSE, FALSE)),
+               label = "Environment"),
+          list(method = "restyle",
+               args = list('visible', c(FALSE, TRUE, FALSE)),
+               label = "Society"),
+          list(method = "restyle",
+               args = list('visible', c(FALSE, FALSE, TRUE)),
+               label = "Governance"))))) %>%      
+      layout(title = 'ESG wording. Beverage industry. BBK dictionary',
+              xaxis = list(title = 'year'),
+              yaxis = list(title = 'percentage', hoverformat = '.2%'), showlegend = FALSE) 
+```
+
+``` {r Read file with ESG scores Energy, include = FALSE}
+ESG_scores_beverages <- read_excel(here("ESG_scores_beverages.xlsx"), sheet = "ESG", col_names = TRUE)
+names(ESG_scores_beverages)[4] <- "cik" #rename the cik column for convenience
+ESG_scores_beverages$cik <- as.character(ESG_scores_beverages$cik)
+
+ESG_scores_beverages_rf <- ESG_scores_beverages[,c(4,13:30)]
+
+for (i in 2:19) { # rename the columns as years
+names(ESG_scores_beverages_rf)[i] <- paste0(2023-i)}
+
+ESG_scores_beverages_rf_panel <- NULL 
+
+for (i in 1:nrow(ESG_scores_beverages_rf)) {
+  df <- ESG_scores_beverages_rf[i,]
+  df <- t(df)
+  df <- as.data.frame(df)
+  df <- df %>% mutate(cik = df[1,1])
+  df <- df[-1,]
+  df$year <- rownames(df)
+  ESG_scores_beverages_rf_panel <- rbind(ESG_scores_beverages_rf_panel, df)
+}
+
+
+ESG_scores_beverages_rf_panel <- merge(ESG_scores_beverages_rf_panel, bev_BBK, by = c("cik", "year"))
+
+ESG_scores_beverages_rf_panel <- as.data.frame(ESG_scores_beverages_rf_panel)
+names(ESG_scores_beverages_rf_panel)[3] <- "rating"
+ESG_scores_beverages_rf_panel$rating <- as.numeric(ESG_scores_beverages_rf_panel$rating)
+ESG_scores_beverages_rf_panel <- na.omit(ESG_scores_beverages_rf_panel)
+
+```
+
+```{r add data for market parameters beverages, include = FALSE}
+
+beverages_market_data <- read_excel(here("revenue_figures.xlsx"), sheet = "beverages", col_names = TRUE)
+
+names(beverages_market_data)[3] <- "cik" #rename the cik column for convenience
+beverages_market_data$cik <- as.character(beverages_market_data$cik)
+
+for (i in 10:27) { # rename the columns as years
+names(beverages_market_data)[i] <- paste0(2031-i)}
+beverages_market_data_capex <- beverages_market_data[c(3, 10:27)]
+
+beverages_all_data_capex <- NULL 
+
+for (i in 1:nrow(beverages_market_data_capex)) {
+  df <- beverages_market_data_capex[i,]
+  df <- t(df)
+  df <- as.data.frame(df)
+  df <- df %>% mutate(cik = df[1,1])
+  df <- df[-1,]
+  df$year <- rownames(df)
+  beverages_all_data_capex <- rbind(beverages_all_data_capex, df)
+}
+
+names(beverages_all_data_capex)[1] <- "capex"
+
+# repeat the same to get prices 
+for (i in 28:45) { # rename the columns as years
+names(beverages_market_data)[i] <- paste0(2049-i)}
+beverages_market_data_prices <- beverages_market_data[c(3, 28:45)]
+
+beverages_all_data_prices <- NULL 
+
+for (i in 1:nrow(beverages_market_data_prices)) {
+  df <- beverages_market_data_prices[i,]
+  df <- t(df)
+  df <- as.data.frame(df)
+  df <- df %>% mutate(cik = df[1,1])
+  df <- df[-1,]
+  df$year <- rownames(df)
+  beverages_all_data_prices <- rbind(beverages_all_data_prices, df)
+}
+
+names(beverages_all_data_prices)[1] <- "share_price"
+
+# and revenues
+for (i in 46:63) { # rename the columns as years
+names(beverages_market_data)[i] <- paste0(2067-i)}
+beverages_market_data_revenues <- beverages_market_data[c(3, 46:63)]
+
+beverages_all_data_revenues <- NULL 
+
+for (i in 1:nrow(beverages_market_data_revenues)) {
+  df <- beverages_market_data_revenues[i,]
+  df <- t(df)
+  df <- as.data.frame(df)
+  df <- df %>% mutate(cik = df[1,1])
+  df <- df[-1,]
+  df$year <- rownames(df)
+  beverages_all_data_revenues <- rbind(beverages_all_data_revenues, df)
+}
+
+names(beverages_all_data_revenues)[1] <- "revenues"
+
+beverages_regression_df <- merge(beverages_all_data_revenues, beverages_all_data_capex, by = c("cik", "year"))
+beverages_regression_df <- beverages_regression_df %>% merge(beverages_all_data_prices, by = c("cik", "year"))
+beverages_regression_df <- beverages_regression_df %>% merge(ESG_scores_beverages_rf_panel, by = c("cik", "year"))
+beverages_regression_df <- beverages_regression_df %>% mutate(industry = "beverages")
+```
+
+#### Trends between industries ####
+
+
+Both measures of readability used (Flesch and FOG) show a similar picture across all three industries. According to both measure the 10Ks seems to be of a very complex nature. All industries included in our analyses do obtained a score that is well under respectively over the range for text sources that are best understood by university graduates. The beverage companies do have a slight higher complexity rating, which can be attribute to the few outliers with extreme values in both measures. This again shows the similarity between those common readability measures and also indicates a disqualification for common readability measure for the context of financial reports.
+
+
+```{r compare industry esg wording, echo=FALSE}
+fashion_time_evol <- fashion_BBK %>% group_by(year) %>% # creates a table of mean ESG scores through time 
+                                summarise(mean_env = mean(relative_env),
+                                          mean_soc = mean(relative_soc), 
+                                          mean_gov = mean(relative_govern),
+                                          mean_total = mean(relative_overall))
+energy_time_evol <- energy_BBK %>% group_by(year) %>% # creates a table of mean ESG scores through time 
+                                summarise(mean_env = mean(relative_env),
+                                          mean_soc = mean(relative_soc), 
+                                          mean_gov = mean(relative_govern),
+                                          mean_total = mean(relative_overall))
+bev_time_evol <- bev_BBK %>% group_by(year) %>% # creates a table of mean ESG scores through time 
+                                summarise(mean_env = mean(relative_env),
+                                          mean_soc = mean(relative_soc), 
+                                          mean_gov = mean(relative_govern),
+                                          mean_total = mean(relative_overall))
+
+plot_ly() %>%
+    add_markers(data=energy_time_evol, name="Energy", x = ~year, y = ~mean_total) %>%
+    add_markers(data=fashion_time_evol, name="Fashion", x = ~year, y = ~mean_total) %>% 
+    add_markers(data=bev_time_evol, name="Beverages", x = ~year, y = ~mean_total) %>%
+    add_markers(data=energy_time_evol, name="Energy", x = ~year, y = ~mean_env) %>%
+    add_markers(data=fashion_time_evol, name="Fashion", x = ~year, y = ~mean_env) %>% 
+    add_markers(data=bev_time_evol, name="Beverages", x = ~year, y = ~mean_env) %>%    
+    add_markers(data=energy_time_evol, name="Energy", x = ~year, y = ~mean_soc) %>%
+    add_markers(data=fashion_time_evol, name="Fashion", x = ~year, y = ~mean_soc) %>% 
+    add_markers(data=bev_time_evol, name="Beverages", x = ~year, y = ~mean_soc) %>%
+  layout(
+    updatemenus = list(
+      list(
+        type = "buttons",
+        x = -0.1,
+        y = 0.8,
+        label = 'Category',
+        buttons = list(
+          list(method = "restyle",
+               args = list('visible', c(TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE)),
+               label = "View all"))), 
+      list(type = "buttons",
+        x = -0.1,
+        y = 0.7,
+        label = 'Category',
+        buttons = list(
+          list(method = "restyle",
+               args = list('visible', c(TRUE, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+               label = "Overall ESG wording"),
+          list(method = "restyle",
+               args = list('visible', c(FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE)),
+               label = "Environment wording"),
+          list(method = "restyle",
+               args = list('visible', c(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE)),
+               label = "Society wording"))))) %>%      
+      layout(title = 'ESG wording. Comparison between industries',
+              xaxis = list(title = 'year'),
+              yaxis = list(title = 'wording percentage', hoverformat = '.2%'), showlegend = FALSE) 
+
+```
+
+### Analysing the parameters that affect ESG scores ###
+
+```{r regressions, include = TRUE}
+beverages_regression_df <- beverages_regression_df[c(1:6,13:17)]
+energy_regression_df <- energy_regression_df[c(1:6,13:17)]
+fashion_regression_df <- fashion_regression_df[c(1:6,13:17)]
+
+all_data_for_regr <- rbind(beverages_regression_df, energy_regression_df)
+all_data_for_regr <- rbind(all_data_for_regr, fashion_regression_df)
+all_data_for_regr <- na.omit(all_data_for_regr)
+all_data_for_regr[3:10] <- data.frame(lapply(all_data_for_regr[3:10], function(x) as.numeric(as.character(x))))
+all_data_for_regr <- all_data_for_regr[order(all_data_for_regr$year),]  %>%
+                      group_by(cik) %>% 
+                      mutate(price_growth = growth.rate(start = end(share_price) + 1, lag = 1))
+
+growth_rate <- function(x) {(x/lag(x)-1) * 100 }
+
+all_data_for_regr <- all_data_for_regr[order(all_data_for_regr$cik, all_data_for_regr$year),]  %>% 
+                      group_by(cik) %>% 
+                      mutate(price_growth = growth_rate(share_price))
+
+
+library(tis)
+library(corrplot)
+corr_matrix <- cor(all_data_for_regr[3:10])
+corrplot(corr_matrix, method = "circle")
+```
+#### Regression results ####
+We have additionally tested our hypothesis via an OLS with the following parameters: 
+
+ESG_Score ~ alpha + beta x ESG_wording + Beta_2 x controls + error
+
+The control variables include industry (beverages, energy or fashion), year, firm adjusted (for splits and dividends) share price growth rate, CAPEX and revenue. As discussed above, we beleive that there should be differences in ESG wording as well as ESG scores between industries. Moreover, larger and more profitable companies are expected to have more resources to invest in ESG activities, which would result in a higher rating as well. Controlling for time will allow us to account for the trend of increased ESG scores and ratings, which we have seen on the graphs above. 
+
+Our model is specified as follows: we control for industry and time effects in all regressions. 
+Specification 1: all three types of ESG scores are used, industry and time controls are used. 
+
+
+Specification 5: all three types of ESG scores are used, firm and time controls are used. 
+
+The results of the regression analysis are presented below:
+```{r regression results, results ='asis', message = FALSE}
+# most basic model with industry and year FE
+model_1 <- lm(rating ~ relative_overall + relative_env + relative_govern + 
+                revenues + capex + price_growth + as.factor(year) + as.factor(industry), 
+                data = all_data_for_regr)
+summary(model_1)
+
+# with interaction term for industry * wording
+model_2 <- lm(rating ~ relative_env*as.factor(industry) +
+                revenues + capex + price_growth + as.factor(year) + as.factor(industry), 
+                data = all_data_for_regr)
+summary(model_2)
+
+# to prove that for social wording the interaction term does not matter
+model_2_supplement <- lm(rating ~ relative_soc*as.factor(industry) +
+                revenues + capex + price_growth + as.factor(year) + as.factor(industry), 
+                data = all_data_for_regr)
+
+# a model with firm fixed effects
+model_3 <- lm(rating ~ relative_overall + relative_env + relative_govern + 
+                revenues + capex + share_price + as.factor(year) + as.factor(cik), 
+                data = all_data_for_regr)
+summary(model_3)
+
+library(stargazer)
+
+stargazer(model_1, model_2, model_3, title="OLS results", align=TRUE, type = "html")
+```
+
+Overall, the models above suggest that ESG ratings are explained by CAPEX, time effect, industry and the ESG wording. We note that the 
+
+The results of model 2 are particularly interesting, since we note that the interaction between environment-related wording with industry has a statistically significant effect on ESG scores. Having tested the same model specification with social and governance wording, we did not find a similar effect. Thus, we can conclude that for energy and fashion sectors ESG wording is of particular importance. 
+
+The most notable, though slightly disappointing, result is that of Model 5, since it shows that the variation in ESG scores is explained by the firm-specific characteristics, and the only significant covariate that we obtain in the end is CAPEX. 
+
+#### Machine learning. Regression tree ####
+Since we expect an obvious non-linearity in the effect of the covairiates on the ESG scores, we decided to add a regression tree analysis to the model. The tree was pre-pruned to have a maximum depth of 5 and the minimum number of observations of 20 per bucket to reduce overfitting. 
+
+The results of the analysis are presented below: 
+
+```{r ML <3, warning=FALSE}
+## cut the unneeded data for ML 
+all_data_for_regr_ML <- all_data_for_regr[c(2:11, 14)]
+
+library(caret)
+library(rpart) 
+library(rpart.plot) 
+library(ipred) 
+library(vip)
+
+set.seed(2021)
+
+ML_model <- rpart(
+  formula = rating ~ .,
+  data    = all_data_for_regr_ML,
+  method  = "anova", 
+  control = rpart.control(minsplit = 2, cp = 0, maxdepth = 5, minbucket = 20)
+  )
+
+rpart.plot(ML_model)
+```
+Similarly to regular OLS, we note that the tree's first split is set at a certain level of CAPEX, which contributes to our understanding that companies that are large and actively investing will have higher ratings. Additionally, we note that industry effect, time and ESG wording play important roles in the analysis. 
+
+Thus, we conclude that the ESG 10-k wording effect on company's ESG rating exists. However, it is definitely not the most important feature that drives company's ESG ratings. 
+
+```{r}
+vip(ML_model, num_features = 10) + ggtitle("Feature importance in ML") + theme_bw()
+```
+
+
+#### Limitations ####
+
+Data collection: The SEC has limited the access for automated tools that download EDGAR filings (e.g. 10-K reports). Therefore, most companies had incomplete data that had to be added manually. That makes it much more difficult if you want so scale the scope of the research question.
+
+There are a variety of different ESG-Ratings on the market. The growing usage of these ESG scores has raised questions by policymakers, investors, researchers, and firms about their reliability, consistency, and overall quality. It is not clear, how exactly the scores are rated. Researchers have furthermore documented, that some ESG rating providers retrocactively rewrite scores (Berg, Fabisik, Sautner, 2020, p.1). 
+
+References: 
+Berg, Florian and Fabisik, Kornelia and Sautner, Zacharias, Rewriting History II: The (Un)Predictable Past of ESG Ratings (November 3, 2020). European Corporate Governance Institute – Finance Working Paper 708/2020
+
+#### Further actions ####
+We further plan to expand the analysis by:
+1) Adding more observations from other sectors. Since between-industry comparison shows differences in attention to ESG between different business sectors, it will be interesting to identify those sectors that are concerned about ESG the most. 
+2) Analyzing not only industry, but also firm size effect, on company's ESG rating. It seems reasonable that larger companies will face more pressure from the regulators and clients and will have enough cash flows to make more ESG-friendly decisions. 
+3) We will additionally expand the analysis of the relationship between esg ratings and words and assess environmental, governance and social wording separately.
+
+#### Appendix ####
+
+Appendix 1: Words that have been additionaly removed during the tokenization process due to insignificance.
+
+words_to_be_removed <- c(stopwords("english"), "million", "fiscal", "january", "february",
+           "march", "april", "may", "june", "july", "august", "september",
+           "october", "november", "december", "business", "net", "s")
+           
+
+Appendix 2: Barplot of 75 most frequent dictionary tokens for the CSR dictionary
+```{r Preparing for barplot of 75 most frequent dictionary tokens for the CSR dictionary, include=FALSE}
+fashion_csr_all_top75_dfm <- textstat_frequency(fashion_csr_all_dfm, n = 75)
+fashion_csr_all_top75_dfm <- fashion_csr_all_top75_dfm %>%
+  mutate(feature = forcats::fct_reorder(feature, desc(frequency)))
+```
+
+
+```{r Barplot of 75 most frequent dictionary tokens for the CSR dictionary, echo = FALSE}
+ggplotly(ggplotly(ggplot(fashion_csr_all_top75_dfm, aes(x = feature, y = frequency))
+         + geom_point(color="steelblue") +
+           theme(axis.text.x = element_text(angle = 90, hjust = 1))))
+```
