@@ -1,12 +1,12 @@
 ---
 title: "ESG Content Analysis on US companies"
 author: "QTA group 2"
-date: "5/19/2021"
+date: "30/05/2021"
 output:
   html_document: default
   pdf_document: default
 ---
-## Table of Content (temporary)	
+## Table of Content 
   Introduction // Research Question H1/H2 // Data collection and sample selection // Dictionary Evaluation // Comparison ESG wording with Rating // Comparison ESG wording/rating with size // Conclusion // Appendix
 
 ```{r Loading packages and load/prepare 10Ks for fashion, include=FALSE}
@@ -80,25 +80,28 @@ fashion_10k[wrong_year, 3] = 2016 # re-write the value in the cell as 2016 corre
 rm(wrong_year) #remove the unnecessary variable
 ```
 
-#### Introduction and Research Questions ####		#### Introduction ####
-Corporate Social Responsibility (CSR) is becoming increasingly important. As governments struggle to find solutions for environmental and social issues, corporations face an increasing pressure to not only be financially successful, but also to conduct their business in a sustainable and ethical way. Consumers and investors want to know how their products are produced and if the company adheres to certain standards. 		In recent years, social responsibility has become a standard measure for every company. Companies are not only measured by their financial success, but also how they conduct their business. ESG ratings are commonly used to compare their performance across industries and sectors.
-Yet while the financial success of a company is easy to check and compare, the same is not true for CSR. 		But regardless of how well a company actually adheres to ESG standards, it will usually want present its actions in a favorable way.
-ESG-Ratings are commonly used to compare performance across industries and sectors. But there is no standard for these rating and the methodology is not publicly available. Subsequently, the ESG-ratings can differ substantially for the same company (Berg, Kölbel and Rigobon, 2020).  
+#### Introduction and Research Questions ####		
+Corporate Social Responsibility (CSR) is becoming increasingly important. As governments struggle to find solutions for environmental and social issues, corporations face an increasing pressure to not only be financially successful, but also to conduct their business in a sustainable and ethical way. Consumers and investors want to know how their products are produced and if the company adheres to certain standards. 
+Yet while the financial success of a company is easy to check and compare, the same is not true for CSR. 
+ESG ratings are commonly used to compare performance across industries and sectors. But there is no standard for these rating and the methodology is not publicly available. Subsequently, the ESG ratings can differ substantially for the same company (Berg, Kölbel and Rigobon, 2020).  
 
-Baier, Berninger and Kiesel (2020) stated: "Financial reporting, or more precisely annual reports, are identified to be the most reliable disclosure to quantify a firm’s contribution to CSR." 		#### Sample selection and data ####
-This is why we want to focus on the usage of ESG-wording in annual reports. An annual report usually differs from company to company in scope, detail and presentation. This makes it more difficult to compare one specific aspect of annual reporting, as we want with the ESG-wording. This is a major advantage of 10Ks reports, which is very often chosen as the data basis for various studies. Both the structure and the required information content are specified by the SEC for all companies enlisted in the US. With the greater standardization of financial presentation, there is the advantage of a more precise differentiation of the content.		At the beginning of our work, we wanted to take a closer look at two industries where ESG is quite a popular topic. We chose the fashion industry and energy companies in oil and gas sectors. Later, we added the beverage industry to compare our results with an industry with little to no perceived ESG importance. To identify industry corresponding companies with their country of exchange being the US we used the Refinitiv Workspace access from the University of St. Gallen. Also to receive a first ESG rating measure we refer to the data from Refinitiv. More precisely we used the screener application from the workspace to filter for the companies we wanted to examine. To identify the correct industry we chose to filter for the Global Industry Classification Standard (GICS). This lead us first to 74 fashion industries. We then excluded the companies where we do not have any ESG rating for the actual year. Our resulting sample of US fashion industries consists of 27 firms. Out of 476 energy companies restricting to only the oil, gas and consumable fuels sector the ESG rating was provided by Refinitiv for 108 companies. To compare it with our fashion sample we further took a random sample of 30 energy companies. For the beverage companies a total of 25 companies resulted.
-We will look at what role the different ESG dimensions play across different industries and if a higher mention of ESG related words correlate with a higher rating. The following two hypotheses will be tested: 		
-  		
- H1: A higher mention of ESG-wording in 10K reports leads to higher ESG-Ratings.		
-As we suspect that bigger and more successful companies have more resources available to invest in ESG measures, we will further look at the size and financial performance and if that reflects in the ESG-Ratings.
+Baier, Berninger and Kiesel (2020) stated: "Financial reporting, or more precisely annual reports, are identified to be the most reliable disclosure to quantify a firm’s contribution to CSR." 
 
- H2: Larger companies have more ESG-wording in 10K reports and therefore a higher ESG-Rating. 
- 
-We choose the Refinitiv ESG-Rating as our benchmark and will analyze 10K reports across three different industry sectors (energy, fashion and beverages) in the timespan of 2004-2021.  		
+This is why we want to focus on the usage of ESG wording in annual reports. An annual report usually differs from company to company in scope, detail and presentation. This makes it more difficult to compare one specific aspect of annual reporting, as we want with the ESG wording. This is a major advantage of 10-Ks reports, which is very often chosen as the data basis for various studies. Both the structure and the required information content are specified by the SEC for all companies enlisted in the US. With the greater standardization of financial presentation, there is the advantage of a more precise differentiation of the content.
+We will look at what role the different ESG dimensions play across different industries and if a higher mention of ESG related words correlate with a higher rating. The following two hypotheses will be tested: 
+
+H1: A higher mention of ESG wording in 10-K reports leads to higher ESG ratings.
+
+As we suspect that bigger and more successful companies have more resources available to invest in ESG measures, we will further look at the size and financial performance and if that reflects in the ESG-Ratings. 
+
+H2: Larger companies have more ESG wording in 10-K reports and therefore a higher ESG-Rating. 
+
+We choose the Refinitiv ESG rating as our benchmark and will analyze 10-K reports across three different industry sectors (energy, fashion and beverages) in the timespan of 2004-2021.  
+		
 #### Sample selection and data ####		
-To examine our research questions the choice was made to examine industries that are typically addressed with ESG-relating topics (fashion and energy industry). In order to distinguish the companies and trends an additional industry was added where there is less controversy and also less perceived importance about ESG issues. In order to work with 10-Ks as annual reporting standards the companies had to be enlisted on an US-exchange. With the screener application from Refintiv Workspace with HSG access only those companies were kept with at least one ESG-Rating provided. This resulted in a sample of 27 fashion firms and 108 gas and oil companies. For comparison reasons our energy sample was randomly reduced to 30 companies. From the beverage industry, 26 companies were identified as suitable.
+To examine our research questions the choice was made to examine industries that are typically addressed with ESG-relating topics (fashion and energy industry). In order to distinguish the companies and trends an additional industry was added where there is less controversy and also less perceived importance about ESG issues. In order to work with 10-Ks as annual reporting standards the companies had to be enlisted on an US-exchange. With the screener application from Refintiv Workspace with HSG access only those companies were kept with at least one ESG rating provided. This resulted in a sample of 27 fashion firms and 108 gas and oil companies. For comparison reasons our energy sample was randomly reduced to 30 companies. From the beverage industry, 26 companies were identified as suitable.
 
-By combination of manual search and the use of the getFilingsHTML function form the R package "edgar" the 10-K filings from these 82 companies have been collected back to the year 2004. It makes little sense to go beyond 2004 because there are only a small number of ESG-ratings for earlier years or a significant amount of companies were not even enlisted back then. However, if a company was already listed in 2004 we would get 18 reports in total if the one from the actual year 2021 was already made public. For the fashion industry there is an average of `r round(ndoc(fashion_10k)/length(unique(fashion_10k$cik)), digits = 2)` total 10-K filings per company. Regarding the energy companies an average of `r round(ndoc(energy_10k)/length(unique(fashion_10k$cik)), digits = 2)` 10-K reports can be found and for beverages it is an average of `r round(ndoc(energy_10k)/length(unique(bev_10k$cik)), digits = 2)` filings.
+By combination of manual search and the use of the getFilingsHTML function form the R package "edgar" the 10-K filings from these 82 companies have been collected back to the year 2004. It makes little sense to go beyond 2004 because there are only a small number of ESG ratings for earlier years or a significant amount of companies were not even enlisted back then. However, if a company was already listed in 2004 we would get 18 reports in total if the one from the actual year 2021 was already made public. For the fashion industry there is an average of `r round(ndoc(fashion_10k)/length(unique(fashion_10k$cik)), digits = 2)` total 10-K filings per company. Regarding the energy companies an average of `r round(ndoc(energy_10k)/length(unique(fashion_10k$cik)), digits = 2)` 10-K reports can be found and for beverages it is an average of `r round(ndoc(energy_10k)/length(unique(bev_10k$cik)), digits = 2)` filings.
 
 As mentioned the best alternative to get the 10-K filings was not really satisfying, a lot of double checks had to be made to ensure the correct underlying text source for each 10-K. In addition to this manual verification, a readability analysis proved to be a useful tool to ensure the correctness of the data. Additionally, it reflected a similar message when applying two of the most typical readability measures (Flesch and FOG). First, all 10-Ks are regarded as very complex and very hard understanding documents with barley no difference between companies or industry. Second there is a slight increase in complexity towards the newest years. (Appendix 1)		We will looking at the following two main questions.
 To compare our analysis based on differences in ESG wording in the reports across industries, first the samples of the respective industries were searched for outliers to ensure a homogenic picture within an industry. A two-dimensional correspondence analysis was conducted to identify those companies with widely differing reports. Further, it supports the trend of higher variety in 10Ks in more recent years compared to current years as concluded by the readability measures. This could be an indication that a greater 10-K filings standardization by the SEC could have taken place towards the present. Is is to point out that the beverage companies make the largest differences between each other. Thus, providing a first indication of a more heterogenic sample regarding the beverage companies. (Appendix 2: Comparison Correspondence Analysis 2020 fashion vs. beverages)		Is there a correlation between the wording of a 10-K report and the ESG-score of a company?
@@ -1459,7 +1462,7 @@ beverages_regression_df <- beverages_regression_df %>% mutate(industry = "bevera
 #### Trends between industries ####
 
 
-Both measures of readability used (Flesch and FOG) show a similar picture across all three industries. According to both measure the 10Ks seems to be of a very complex nature. All industries included in our analyses do obtained a score that is well under respectively over the range for text sources that are best understood by university graduates. The beverage companies do have a slight higher complexity rating, which can be attribute to the few outliers with extreme values in both measures. This again shows the similarity between those common readability measures and also indicates a disqualification for common readability measure for the context of financial reports.
+Both measures of readability used (Flesch and FOG) show a similar picture across all three industries. According to both measure the 10-Ks seems to be of a very complex nature. All industries included in our analyses do obtained a score that is well under respectively over the range for text sources that are best understood by university graduates. The beverage companies do have a slight higher complexity rating, which can be attribute to the few outliers with extreme values in both measures. This again shows the similarity between those common readability measures and also indicates a disqualification for common readability measure for the context of financial reports.
 
 
 ```{r compare industry esg wording, echo=FALSE}
@@ -1616,7 +1619,7 @@ rpart.plot(ML_model)
 ```
 Similarly to regular OLS, we note that the tree's first split is set at a certain level of CAPEX, which contributes to our understanding that companies that are large and actively investing will have higher ratings. Additionally, we note that industry effect, time and ESG wording play important roles in the analysis. 
 
-Thus, we conclude that the ESG 10-k wording effect on company's ESG rating exists. However, it is definitely not the most important feature that drives company's ESG ratings. 
+Thus, we conclude that the ESG 10-K wording effect on company's ESG rating exists. However, it is definitely not the most important feature that drives company's ESG ratings. 
 
 ```{r}
 vip(ML_model, num_features = 10) + ggtitle("Feature importance in ML") + theme_bw()
