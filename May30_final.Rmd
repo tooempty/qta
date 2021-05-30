@@ -9,7 +9,7 @@ output:
 ## Table of Content 
   Introduction // Research Question H1/H2 // Data collection and sample selection // Dictionary Evaluation // Comparison ESG wording with Rating // Comparison ESG wording/rating with size // Conclusion // Appendix
 
-```{r Loading packages and load/prepare 10Ks for fashion, include=FALSE}
+```{r Loading packages and load/prepare 10-Ks for fashion, include=FALSE}
 # load packages
 library(readtext)
 library(dplyr)
@@ -40,7 +40,7 @@ fashion <- fashion[, c(1, 4:14)]
 # keeping only the cik number
 fashion_cik <- fashion$CIK
 
-# load the 10Ks from downloaded files
+# load the 10-Ks from downloaded files
 fashion_10k <- NULL
 
 # loop that collects all reports for all companies for each industry
@@ -92,9 +92,9 @@ We will look at what role the different ESG dimensions play across different ind
 
 H1: A higher mention of ESG wording in 10-K reports leads to higher ESG ratings.
 
-As we suspect that bigger and more successful companies have more resources available to invest in ESG measures, we will further look at the size and financial performance and if that reflects in the ESG-Ratings. 
+As we suspect that bigger and more successful companies have more resources available to invest in ESG measures, we will further look at the size and financial performance and if that reflects in the ESG ratings. 
 
-H2: Larger companies have more ESG wording in 10-K reports and therefore a higher ESG-Rating. 
+H2: Larger companies have more ESG wording in 10-K reports and therefore a higher ESG rating. 
 
 We choose the Refinitiv ESG rating as our benchmark and will analyze 10-K reports across three different industry sectors (energy, fashion and beverages) in the timespan of 2004-2021.  
 		
@@ -104,7 +104,7 @@ To examine our research questions the choice was made to examine industries that
 By combination of manual search and the use of the getFilingsHTML function form the R package "edgar" the 10-K filings from these 82 companies have been collected back to the year 2004. It makes little sense to go beyond 2004 because there are only a small number of ESG ratings for earlier years or a significant amount of companies were not even enlisted back then. However, if a company was already listed in 2004 we would get 18 reports in total if the one from the actual year 2021 was already made public. For the fashion industry there is an average of `r round(ndoc(fashion_10k)/length(unique(fashion_10k$cik)), digits = 2)` total 10-K filings per company. Regarding the energy companies an average of `r round(ndoc(energy_10k)/length(unique(fashion_10k$cik)), digits = 2)` 10-K reports can be found and for beverages it is an average of `r round(ndoc(energy_10k)/length(unique(bev_10k$cik)), digits = 2)` filings.
 
 As mentioned the best alternative to get the 10-K filings was not really satisfying, a lot of double checks had to be made to ensure the correct underlying text source for each 10-K. In addition to this manual verification, a readability analysis proved to be a useful tool to ensure the correctness of the data. Additionally, it reflected a similar message when applying two of the most typical readability measures (Flesch and FOG). First, all 10-Ks are regarded as very complex and very hard understanding documents with barley no difference between companies or industry. Second there is a slight increase in complexity towards the newest years. (Appendix 1)		We will looking at the following two main questions.
-To compare our analysis based on differences in ESG wording in the reports across industries, first the samples of the respective industries were searched for outliers to ensure a homogenic picture within an industry. A two-dimensional correspondence analysis was conducted to identify those companies with widely differing reports. Further, it supports the trend of higher variety in 10Ks in more recent years compared to current years as concluded by the readability measures. This could be an indication that a greater 10-K filings standardization by the SEC could have taken place towards the present. Is is to point out that the beverage companies make the largest differences between each other. Thus, providing a first indication of a more heterogenic sample regarding the beverage companies. (Appendix 2: Comparison Correspondence Analysis 2020 fashion vs. beverages)		Is there a correlation between the wording of a 10-K report and the ESG-score of a company?
+To compare our analysis based on differences in ESG wording in the reports across industries, first the samples of the respective industries were searched for outliers to ensure a homogenic picture within an industry. A two-dimensional correspondence analysis was conducted to identify those companies with widely differing reports. Further, it supports the trend of higher variety in 10Ks in more recent years compared to current years as concluded by the readability measures. This could be an indication that a greater 10-K filings standardization by the SEC could have taken place towards the present. Is is to point out that the beverage companies make the largest differences between each other. Thus, providing a first indication of a more heterogenic sample regarding the beverage companies. (Appendix 2: Comparison Correspondence Analysis 2020 fashion vs. beverages)		Is there a correlation between the wording of a 10-K report and the ESG score of a company?
 
 
 ```{r Creating a corpus and apply the readability measures for fashion, include=FALSE}
