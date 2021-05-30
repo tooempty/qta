@@ -309,8 +309,6 @@ plot_ly(fashion_CSR, x = ~year, y = ~relative_env, type='scatter', mode='markers
 
 With the increasing importance of environmental, social and governance (ESG) factors for companies and investors, Baier, Berninger and Kiesel (2020) have recently developed a new ESG content dictionary. The dictionary was trained on the basis of financial reports and is intended as a tool to reflect the ESG activities of companies. Each of the 482 words occurring in the dictionary is considered as a ESG-term that is mainly used in the context of ESG. The index consists of three main topics: governance, environmental and social. Further there are 11 categories and 35 subcategories that allows a very precise search for different aspects in the field of ESG.
 
-reference:
-- Baier, Berninger & Kiesel (2020)
 
 ```{r Loading BBK dict, include = FALSE}
 ### Load BBK dict ###
@@ -1633,14 +1631,20 @@ Data collection: The SEC has limited the access for automated tools that downloa
 
 There are a variety of different ESG-Ratings on the market. The growing usage of these ESG scores has raised questions by policymakers, investors, researchers, and firms about their reliability, consistency, and overall quality. It is not clear, how exactly the scores are rated. Researchers have furthermore documented, that some ESG rating providers retrocactively rewrite scores (Berg, Fabisik, Sautner, 2020, p.1). 
 
-References: 
-Berg, Florian and Fabisik, Kornelia and Sautner, Zacharias, Rewriting History II: The (Un)Predictable Past of ESG Ratings (November 3, 2020). European Corporate Governance Institute – Finance Working Paper 708/2020
 
 #### Further actions ####
 We further plan to expand the analysis by:
 1) Adding more observations from other sectors. Since between-industry comparison shows differences in attention to ESG between different business sectors, it will be interesting to identify those sectors that are concerned about ESG the most. 
 2) Analyzing not only industry, but also firm size effect, on company's ESG rating. It seems reasonable that larger companies will face more pressure from the regulators and clients and will have enough cash flows to make more ESG-friendly decisions. 
 3) We will additionally expand the analysis of the relationship between esg ratings and words and assess environmental, governance and social wording separately.
+
+## References ##
+
+Baier, Philipp and Berninger, Marc and Kiesel, Florian, Environmental, Social and Governance Reporting in Annual Reports: A Textual Analysis (March 12, 2020). Financial Markets, Institutions & Instruments, Forthcoming
+
+Berg, Florian and Kölbel, Julian and Rigobon, Roberto, Aggregate Confusion: The Divergence of ESG Ratings (May 17, 2020). Available at SSRN: 
+
+Berg, Florian and Fabisik, Kornelia and Sautner, Zacharias, Rewriting History II: The (Un)Predictable Past of ESG Ratings (November 3, 2020). European Corporate Governance Institute – Finance Working Paper 708/2020
 
 ## Appendix ##
 Appendix 1: Readability analysis with FOG measures for all three industry samples		Appendix 1: Words that have been additionaly removed during the tokenization process due to insignificance.
