@@ -1,6 +1,6 @@
 ---
 title: "ESG Content Analysis on US companies"
-author: "QTA group 2"
+author: "QTA group 2 - Marina Perminova, Martin Bader, Alexandre Moine"
 date: "30/05/2021"
 output:
   html_document: 
